@@ -1,0 +1,8 @@
+\babel@toc {portuges}{}
+\contentsline {chapter}{\numberline {1}Introdu\IeC {\c c}\IeC {\~a}o}{2}% 
+\contentsline {chapter}{\numberline {2}Enunciado}{3}% 
+\contentsline {chapter}{\numberline {3}Trabalhos Relacionados}{4}% 
+\contentsline {chapter}{\numberline {4}Proposta de Solu\IeC {\c c}\IeC {\~a}o}{5}% 
+\contentsline {chapter}{\numberline {5}Desenvolvimento}{6}% 
+\contentsline {chapter}{\numberline {6}Resultado}{7}% 
+\contentsline {chapter}{\numberline {7}Conclus\IeC {\~a}o}{8}% 

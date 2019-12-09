@@ -2,6 +2,6 @@ package net;
 
 public class Message
 {
-    public int[] vectorClock = new int[Config.MAX_PROCESSES];
-    public byte[] content;
+    private int[] vectorClock = new int[Config.MAX_PROCESSES];
+    private byte[] content;
 }

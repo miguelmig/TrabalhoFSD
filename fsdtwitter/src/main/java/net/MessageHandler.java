@@ -14,6 +14,7 @@ public class MessageHandler
 {
     private ManagedMessagingService ms;
     private int port;
+
     private int[] delivered = new int[Config.MAX_PROCESSES];
     private List<Message> deliveryQueue = new ArrayList<>();
 
@@ -32,6 +33,11 @@ public class MessageHandler
     }
 
     public void startMessageHandler()
+
+
+    }
+
+    public void StartMessageHandler()
     {
         this.ms.start();
 

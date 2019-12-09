@@ -28,9 +28,6 @@ public class Server
         mh = new MessageHandler(port);
 
         mh.StartMessageHandler();
-
-
-
     }
 
     private static void BuildProcessList()
@@ -40,6 +37,7 @@ public class Server
             processes.add(new Process(port));
         }
     }
+
 
     public static void BroadcastMessage(Message msg)
     {

@@ -5,12 +5,12 @@ import java.util.List;
 public class User {
 
     private String name;
-    private String pw;
+    private String password;
     private List<String> subTags;
 
-    public User(String name, String pw, List<String> subTags) {
+    public User(String name, String password, List<String> subTags) {
         this.name = name;
-        this.pw = pw;
+        this.password = password;
         this.subTags = subTags;
     }
 
@@ -18,12 +18,12 @@ public class User {
         return this.name;
     }
 
-    public String getPW() {
-        return this.pw;
+    public String getPassword() {
+        return this.password;
     }
 
-    public List<String> getTags {
-        return this.subTags
+    public List<String> getTags() {
+        return this.subTags;
     }
 
 }

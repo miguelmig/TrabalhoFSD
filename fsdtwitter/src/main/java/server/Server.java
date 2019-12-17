@@ -27,7 +27,7 @@ public class Server
         BuildProcessList();
         mh = new MessageHandler(port);
 
-        mh.StartMessageHandler();
+        mh.startMessageHandler();
     }
 
     private static void BuildProcessList()
@@ -44,5 +44,9 @@ public class Server
 
     }
 
+    public static void DeliverMsg(String message_type, Address addr, Message data)
+    {
+        System.out.println("Delivering message!");
+    }
 
 }

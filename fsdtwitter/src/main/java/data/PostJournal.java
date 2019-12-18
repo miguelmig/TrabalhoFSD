@@ -29,43 +29,39 @@ public class PostJournal {
     }
 
     public void writeJournal(Post p) {
-        SegmentedJournalWriter<Post> w = sj.writer();
-        w.append(p);
+        SegmentedJournalWriter<Post> writer = sj.writer();
+        writer.append(p);
         CompletableFuture.supplyAsync(() -> {
-            w.flush();
+            writer.flush();
             return null;
-        }).thenRun(() -> {
-            w.close();
-        });
+        }).thenRun(writer::close);
     }
 
     public void writeJournal(Map<Integer, Post> mp) {
-        SegmentedJournalWriter<Post> w = sj.writer();
+        SegmentedJournalWriter<Post> writer = sj.writer();
 
         for(Post p : mp.values()) {
-            w.append(p);
+            writer.append(p);
         }
 
         CompletableFuture.supplyAsync(() -> {
-            w.flush();
+            writer.flush();
             return null;
-        }).thenRun(() -> {
-            w.close();
-        });
+        }).thenRun(writer::close);
     }
 
     public Map<Integer, Post> readJournal(int entry) {
         Map<Integer, Post> res = new HashMap<>();
-        SegmentedJournalReader<Post> r = sj.openReader(entry);
+        SegmentedJournalReader<Post> reader = sj.openReader(entry);
         Post p;
 
-        while(r.hasNext()) {
-            p = r.next().entry();
+        while(reader.hasNext()) {
+            p = reader.next().entry();
             res.put(p.getId(), p);
         }
 
         CompletableFuture.supplyAsync(() -> {
-            r.close();
+            reader.close();
             return null;
         });
 

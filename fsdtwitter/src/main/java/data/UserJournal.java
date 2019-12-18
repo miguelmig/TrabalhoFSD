@@ -1,5 +1,6 @@
 package data;
 
+import config.JournalConfig;
 import data.models.User;
 import io.atomix.storage.journal.SegmentedJournal;
 import io.atomix.storage.journal.SegmentedJournalReader;
@@ -15,55 +16,51 @@ public class UserJournal {
 
     private SegmentedJournal<User> sj;
 
-    public UserJournal(String logName) {
+    public UserJournal() {
         Serializer s = new SerializerBuilder()
                 .addType(User.class)
                 .build();
 
         sj = SegmentedJournal.<User>builder()
-                .withName(logName)
+                .withName(JournalConfig.getUsersLogName())
                 .withSerializer(s)
                 .build();
     }
 
     public void writeJournal(User u) {
-        SegmentedJournalWriter<User> w = sj.writer();
-        w.append(u);
+        SegmentedJournalWriter<User> writer = sj.writer();
+        writer.append(u);
         CompletableFuture.supplyAsync(() -> {
-            w.flush();
+            writer.flush();
             return null;
-        }).thenRun(() -> {
-            w.close();
-        });
+        }).thenRun(writer::close);
     }
 
     public void writeJournal(Map<String, User> mu) {
-        SegmentedJournalWriter<User> w = sj.writer();
+        SegmentedJournalWriter<User> writer = sj.writer();
 
         for(User u : mu.values()) {
-            w.append(u);
+            writer.append(u);
         }
 
         CompletableFuture.supplyAsync(() -> {
-            w.flush();
+            writer.flush();
             return null;
-        }).thenRun(() -> {
-            w.close();
-        });
+        }).thenRun(writer::close);
     }
 
     public Map<String, User> readJournal(int entry) {
         Map<String, User> res = new HashMap<>();
-        SegmentedJournalReader<User> r = sj.openReader(entry);
+        SegmentedJournalReader<User> reader = sj.openReader(entry);
         User u;
 
-        while(r.hasNext()) {
-            u = r.next().entry();
+        while(reader.hasNext()) {
+            u = reader.next().entry();
             res.put(u.getName(), u);
         }
 
         CompletableFuture.supplyAsync(() -> {
-            r.close();
+            reader.close();
             return null;
         });
 

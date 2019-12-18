@@ -1,4 +1,5 @@
 package server;
+import config.Config;
 import io.atomix.utils.net.Address;
 import net.*;
 
@@ -23,7 +24,6 @@ public class Server
             port = Integer.parseInt(args[0]);
         }
 
-
         BuildProcessList();
         mh = new MessageHandler(port);
 
@@ -32,12 +32,11 @@ public class Server
 
     private static void BuildProcessList()
     {
-        for(int port = net.Config.ADDR_START; port < net.Config.ADDR_START + net.Config.MAX_PROCESSES; ++port)
+        for(int port = Config.ADDR_START; port < Config.ADDR_START + Config.MAX_PROCESSES; ++port)
         {
             processes.add(new Process(port));
         }
     }
-
 
     public static void BroadcastMessage(Message msg)
     {

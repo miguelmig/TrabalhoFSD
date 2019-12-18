@@ -1,5 +1,7 @@
 package net;
 
+import config.Config;
+
 public class Message
 {
 

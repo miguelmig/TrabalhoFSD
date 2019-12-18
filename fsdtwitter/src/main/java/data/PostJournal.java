@@ -17,13 +17,13 @@ public class PostJournal {
 
     private SegmentedJournal<Post> sj;
 
-    public PostJournal() {
+    public PostJournal(String logName) {
         Serializer s = new SerializerBuilder()
                 .addType(Post.class)
                 .build();
 
         this.sj = SegmentedJournal.<Post>builder()
-                .withName(JournalConfig.getPostsLogName())
+                .withName(logName)
                 .withSerializer(s)
                 .build();
     }

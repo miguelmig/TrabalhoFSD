@@ -16,13 +16,13 @@ public class UserJournal {
 
     private SegmentedJournal<User> sj;
 
-    public UserJournal() {
+    public UserJournal(String logName) {
         Serializer s = new SerializerBuilder()
                 .addType(User.class)
                 .build();
 
         sj = SegmentedJournal.<User>builder()
-                .withName(JournalConfig.getUsersLogName())
+                .withName(logName)
                 .withSerializer(s)
                 .build();
     }

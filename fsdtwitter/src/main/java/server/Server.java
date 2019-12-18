@@ -25,6 +25,7 @@ public class Server
         }
 
         BuildProcessList();
+        
         mh = new MessageHandler(port);
 
         mh.startMessageHandler();

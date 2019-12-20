@@ -31,8 +31,6 @@ public class Client {
         Future<Void> result = socketChannel.connect(serverAddress);
         result.get();
         System.out.println("Connected to server!");
-
-        
     }
 
 

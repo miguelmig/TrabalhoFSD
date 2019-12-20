@@ -1,17 +1,19 @@
 package client.menus;
 
-public interface Menu {
+import client.Client;
 
-    void display();
+public abstract class Menu {
 
-    void handleEvents();
+    public abstract void display();
 
-    default void run() {
+    public abstract void handleEvents();
+
+    public void run() {
         this.display();
         this.handleEvents();
     }
 
-    default void clear() {
+    public void clear() {
 
     }
 }

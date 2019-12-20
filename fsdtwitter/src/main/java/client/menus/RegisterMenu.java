@@ -1,8 +1,16 @@
 package client.menus;
 
+import client.Client;
+
 import java.util.Scanner;
 
-public class RegisterMenu implements Menu {
+public class RegisterMenu extends Menu {
+
+    private Client client;
+
+    public RegisterMenu(Client client) {
+        this.client = client;
+    }
 
     @Override
     public void display() {

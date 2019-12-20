@@ -1,8 +1,16 @@
 package client.menus;
 
+import client.Client;
+
 import java.util.Scanner;
 
-public class StartMenu implements Menu {
+public class StartMenu extends Menu {
+
+    private Client client;
+
+    public StartMenu(Client client) {
+        this.client = client;
+    }
 
     @Override
     public void display() {
@@ -22,13 +30,13 @@ public class StartMenu implements Menu {
         switch (res) {
             case 1:
                 clear();
-                Menu loginMenu = new LoginMenu();
+                Menu loginMenu = new LoginMenu(this.client);
                 loginMenu.run();
                 break;
 
             case 2:
                 clear();
-                Menu registerMenu = new RegisterMenu();
+                Menu registerMenu = new RegisterMenu(this.client);
                 registerMenu.run();
                 break;
 

@@ -41,6 +41,7 @@ public class StartMenu extends Menu {
                 break;
 
             default:
+                System.out.println("Input inválido");
                 break;
         }
     }

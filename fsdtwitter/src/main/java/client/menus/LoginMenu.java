@@ -27,12 +27,18 @@ public class LoginMenu extends Menu {
         System.out.print("password: ");
         String password = s.nextLine();
 
-        // confirmação dos dados
-        //      .
-        //      .
-        //      .
+        String info = username + " " + password;
+        client.sendMessage(Client.MessageType.LOGIN, info);
 
-        Menu newMenu = new MainMenu(this.client);
-        newMenu.run();
+        //TODO confirmar login
+        boolean valid_login = true;
+        if (valid_login) {
+            Menu newMenu = new MainMenu(this.client);
+            newMenu.run();
+        } else {
+            System.out.println("Login inválido. Tente outra vez.");
+            Menu newMenu = new LoginMenu(this.client);
+            newMenu.run();
+        }
     }
 }

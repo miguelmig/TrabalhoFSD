@@ -3,6 +3,7 @@ package client;
 import client.menus.Menu;
 import client.menus.StartMenu;
 import handlers.WriteHandler;
+import net.Message;
 import spullara.nio.channels.FutureSocketChannel;
 import utils.FutureLineBuffer;
 
@@ -10,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 
@@ -18,19 +20,42 @@ public class Client {
     private static FutureSocketChannel socketChannel;
     private static FutureLineBuffer buf;
 
+    public enum MessageType {
+        REGISTER,
+        LOGIN,
+        POST,
+        GET_TOPICS,
+        GET_LAST_POSTS
+    }
+
     public static void main(String[] args) throws Exception {
 
         Client client = new Client();
 
         String hostname = "localhost";
 
-        client.connectToServer(hostname);
+        client.connectToServer(hostname)
+                .thenRun(() -> {
+                    System.out.println("Connected to server!");
+                    buf = new FutureLineBuffer(socketChannel);
+
+                    client.handleMessages();
+
+                    client.startMenu();
+                    //Menu menu = new StartMenu(client);
+                    //menu.run();
+                });
 
         while (true) {
             Thread.sleep(1000);
         }
         //Menu menu = new StartMenu(client);
         //menu.run();
+    }
+
+    private void startMenu() {
+        Menu menu = new StartMenu(this);
+        menu.run();
     }
 
     private void handleMessages() {
@@ -48,24 +73,46 @@ public class Client {
 
 
 
-    private void connectToServer(String hostname) throws Exception {
+    private CompletableFuture<Void> connectToServer(String hostname) throws Exception {
 
         socketChannel = new FutureSocketChannel();
         SocketAddress serverAddress = new InetSocketAddress(hostname, 8000);
 
-        socketChannel.connect(serverAddress)
-                .thenRun(() -> {
-                    System.out.println("Connected to server!");
-                    buf = new FutureLineBuffer(socketChannel);
-                    buf.write("Eu sou o cliente\n");
-
-                    handleMessages();
-                });
+        return socketChannel.connect(serverAddress);
     }
 
-    private void send(String msg) {
+    public void sendMessage(MessageType type, String content) {
 
-        buf.write(msg);
-        System.out.println("Escrevi");
+        StringBuilder msg = new StringBuilder();
+
+        switch (type) {
+            case REGISTER:
+                msg.append("/register ");
+                break;
+
+            case LOGIN:
+                msg.append("/login ");
+                break;
+
+            case POST:
+                msg.append("/post ");
+                break;
+
+            case GET_TOPICS:
+                msg.append("/get_topics ");
+                break;
+
+            case GET_LAST_POSTS:
+                msg.append("/get_last_posts ");
+                break;
+
+            default:
+                break;
+        }
+
+        msg.append(content);
+
+        buf.writeln(msg.toString());
     }
+
 }

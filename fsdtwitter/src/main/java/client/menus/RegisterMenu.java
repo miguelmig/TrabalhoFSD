@@ -26,5 +26,18 @@ public class RegisterMenu extends Menu {
 
         System.out.print("password: ");
         String password = s.nextLine();
+
+        String info = username + " " + password;
+        client.sendMessage(Client.MessageType.REGISTER, info);
+
+        //TODO confirmar registo
+        boolean valid_register = true;
+        if (valid_register) {
+            Menu newMenu = new StartMenu(this.client);
+            newMenu.run();
+        } else {
+            Menu newMenu = new RegisterMenu(this.client);
+            newMenu.run();
+        }
     }
 }

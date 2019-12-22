@@ -40,10 +40,9 @@ public class MessageHandler
                 .addType(Post.class)
                 .build();
 
-        ms.registerHandler("state", (addr, data) -> {
-            // Share state
-        }, executor);
+        registerMessage("state");
 
+        /*
         ms.registerHandler("publish", (addr, data) -> {
             if(isServer(addr))
             {
@@ -54,6 +53,8 @@ public class MessageHandler
             Post new_post = s.decode(msg.getContent());
 
         }, executor);
+        */
+
     }
 
     public void startMessageHandler()
@@ -61,7 +62,7 @@ public class MessageHandler
         this.ms.start();
     }
 
-    public void registerHandler(String message_type, BiConsumer<Address, byte[]> consumer)
+    public void registerMessage(String message_type)
     {
         ms.registerHandler(message_type, (addr, data) -> {
             Message msg = s.decode(data);
@@ -92,8 +93,9 @@ public class MessageHandler
 
                 onDeliverMessage(message_type, addr, msg);
 
+                // TODO: See if any messages on the delivery queue can be delivered now
+
             }
-            consumer.accept(addr, data);
         }, executor);
     }
 
@@ -113,6 +115,12 @@ public class MessageHandler
         delivered[process_id] = msg.getVectorClock()[process_id];
 
         Server.DeliverMsg(message_type, addr, msg);
+    }
+
+    public void broadcastMessage(String message_type, byte[] msg)
+    {
+        Message wrapper = new Message();
+        //wrapper.setVectorClock();
     }
 
 }

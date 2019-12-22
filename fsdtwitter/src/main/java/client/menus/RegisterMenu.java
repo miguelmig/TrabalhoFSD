@@ -14,7 +14,7 @@ public class RegisterMenu extends Menu {
 
     @Override
     public void display() {
-        System.out.println("REGISTER MENU");
+        System.out.println("-------- REGISTER MENU --------");
     }
 
     @Override

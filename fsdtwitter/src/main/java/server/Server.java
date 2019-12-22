@@ -4,23 +4,30 @@ import config.Config;
 import handlers.AcceptHandler;
 import io.atomix.utils.net.Address;
 import net.*;
+import spullara.nio.channels.FutureServerSocketChannel;
+import spullara.nio.channels.FutureSocketChannel;
+import utils.FutureLineBuffer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Server {
     //private static List<Process> processes = new ArrayList<>();
-    private static List<Client> clients = new ArrayList<>();
+    //private static List<Client> clients = new ArrayList<>();
 
     private static MessageHandler mh;
     private static int port;
+    private static FutureServerSocketChannel ssc;
 
     public static void main(String[] args) throws Exception {
 
@@ -30,22 +37,44 @@ public class Server {
             port = Integer.parseInt(args[0]);
         }
 
-        //BuildProcessList();
-        AsynchronousChannelGroup g =
-                AsynchronousChannelGroup.withFixedThreadPool(1,
-                        Executors.defaultThreadFactory());
-
-        AsynchronousServerSocketChannel ssc = AsynchronousServerSocketChannel.open(g);
+        ssc = new FutureServerSocketChannel();
         ssc.bind(new InetSocketAddress(port));
 
-        ssc.accept(null, new AcceptHandler(ssc));
-        System.out.println("Server listening on port: " + port);
+        System.out.println("Server listening on port " + port);
+        ssc.accept()
+                .thenAccept(Server::onAccept);
 
-        //mh = new MessageHandler(port);
+        while (true) {
+            Thread.sleep(1000);
+        }
+        //BuildProcessList();
+//
+        ////mh = new MessageHandler(port);
+//
+        ////mh.startMessageHandler();
+    }
 
-        //mh.startMessageHandler();
+    private static void onAccept(FutureSocketChannel sc) {
+        System.out.println("Client Connected!");
 
-        g.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        FutureLineBuffer buf = new FutureLineBuffer(sc);
+
+        buf.write("Eu sou o servidor");
+        buf.readLine()
+                .thenCompose(msg -> onRead(buf, msg));
+
+        ssc.accept()
+                .thenAccept(Server::onAccept);
+    }
+
+    private static CompletableFuture<String> onRead(FutureLineBuffer buf, String msg) {
+
+        buf.write(msg);
+        // parse reading
+        System.out.println("Recebi mensagem");
+
+        return buf.readLine()
+                .thenCompose(newMsg -> onRead(buf, newMsg));
     }
 
     //private static void BuildProcessList()
@@ -63,6 +92,8 @@ public class Server {
     public static void DeliverMsg(String message_type, Address addr, Message data) {
         System.out.println("Delivering message!");
     }
+
+
 
 }
 

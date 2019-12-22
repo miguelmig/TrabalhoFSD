@@ -14,7 +14,7 @@ public class LoginMenu extends Menu {
 
     @Override
     public void display() {
-        System.out.println("LOGIN MENU");
+        System.out.println("-------- LOGIN MENU --------");
     }
 
     @Override
@@ -26,5 +26,13 @@ public class LoginMenu extends Menu {
 
         System.out.print("password: ");
         String password = s.nextLine();
+
+        // confirmação dos dados
+        //      .
+        //      .
+        //      .
+
+        Menu newMenu = new MainMenu(this.client);
+        newMenu.run();
     }
 }

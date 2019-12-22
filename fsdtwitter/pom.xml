@@ -41,5 +41,10 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.7</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.spullara.java8</groupId>
+            <artifactId>concurrent</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>

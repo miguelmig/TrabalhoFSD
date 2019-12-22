@@ -28,6 +28,7 @@ public class Server {
     private static MessageHandler mh;
     private static int port;
     private static FutureServerSocketChannel ssc;
+    private static List<FutureLineBuffer> bufs = new ArrayList<>();
 
     public static void main(String[] args) throws Exception {
 
@@ -58,8 +59,8 @@ public class Server {
         System.out.println("Client Connected!");
 
         FutureLineBuffer buf = new FutureLineBuffer(sc);
-
-        buf.write("Eu sou o servidor");
+        bufs.add(buf);
+        buf.writeln("Eu sou o servidor");
         buf.readLine()
                 .thenCompose(msg -> onRead(buf, msg));
 
@@ -69,7 +70,7 @@ public class Server {
 
     private static CompletableFuture<String> onRead(FutureLineBuffer buf, String msg) {
 
-        buf.write(msg);
+    buf.write(msg + '\n');
         // parse reading
         System.out.println("Recebi mensagem");
 

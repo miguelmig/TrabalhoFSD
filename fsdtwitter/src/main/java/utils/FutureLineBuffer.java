@@ -50,4 +50,10 @@ public class FutureLineBuffer {
 
         return sc.write(buf);
     }
+
+    public CompletableFuture<Integer> writeln(String msg)
+    {
+        return write(msg + '\n');
+    }
+
 }

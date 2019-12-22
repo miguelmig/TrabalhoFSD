@@ -18,7 +18,6 @@ public class Client {
     private static FutureSocketChannel socketChannel;
     private static FutureLineBuffer buf;
 
-
     public static void main(String[] args) throws Exception {
 
         Client client = new Client();
@@ -26,11 +25,6 @@ public class Client {
         String hostname = "localhost";
 
         client.connectToServer(hostname);
-
-        buf = new FutureLineBuffer(socketChannel);
-        buf.write("Eu sou o cliente");
-
-        client.handleMessages();
 
         while (true) {
             Thread.sleep(1000);
@@ -60,7 +54,13 @@ public class Client {
         SocketAddress serverAddress = new InetSocketAddress(hostname, 8000);
 
         socketChannel.connect(serverAddress)
-                .thenRun(() -> System.out.println("Connected to server!"));
+                .thenRun(() -> {
+                    System.out.println("Connected to server!");
+                    buf = new FutureLineBuffer(socketChannel);
+                    buf.write("Eu sou o cliente\n");
+
+                    handleMessages();
+                });
     }
 
     private void send(String msg) {

@@ -2,18 +2,14 @@ package client;
 
 import client.menus.Menu;
 import client.menus.StartMenu;
-import handlers.WriteHandler;
-import net.Message;
 import spullara.nio.channels.FutureSocketChannel;
 import utils.FutureLineBuffer;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousSocketChannel;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
 
 public class Client {
 
@@ -39,7 +35,7 @@ public class Client {
                     System.out.println("Connected to server!");
                     buf = new FutureLineBuffer(socketChannel);
 
-                    client.handleMessages();
+                    //client.handleMessages();
 
                     client.startMenu();
                     //Menu menu = new StartMenu(client);
@@ -58,10 +54,12 @@ public class Client {
         menu.run();
     }
 
+
     private void handleMessages() {
         buf.readLine()
                 .thenCompose(msg -> onRead(buf, msg));
     }
+
 
 
     private CompletionStage<String> onRead(FutureLineBuffer buf, String msg) {
@@ -79,6 +77,20 @@ public class Client {
         SocketAddress serverAddress = new InetSocketAddress(hostname, 8000);
 
         return socketChannel.connect(serverAddress);
+    }
+
+
+    public String readMessage() {
+        String msg = null;
+        try {
+
+            msg = buf.readLine().get();
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        return msg;
     }
 
     public void sendMessage(MessageType type, String content) {

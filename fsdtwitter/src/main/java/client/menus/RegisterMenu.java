@@ -1,6 +1,7 @@
 package client.menus;
 
 import client.Client;
+import enums.MessageCode;
 
 import java.util.Scanner;
 
@@ -30,14 +31,26 @@ public class RegisterMenu extends Menu {
         String info = username + " " + password;
         client.sendMessage(Client.MessageType.REGISTER, info);
 
-        //TODO confirmar registo
-        boolean valid_register = true;
-        if (valid_register) {
-            Menu newMenu = new StartMenu(this.client);
-            newMenu.run();
-        } else {
-            Menu newMenu = new RegisterMenu(this.client);
-            newMenu.run();
+
+        String msg = client.readMessage();
+
+        MessageCode code = MessageCode.valueOf(msg);
+        switch (code) {
+
+            case ERROR_USER_ALREADY_EXISTS:
+                System.out.println("Erro! Já existe um utilizador com este nome.");
+                Menu registerMenu = new RegisterMenu(this.client);
+                registerMenu.run();
+                break;
+
+            case OK_SUCCESSFUL_REGISTER:
+                System.out.println("Registo efetuado com sucesso!");
+                Menu startMenu = new StartMenu(this.client);
+                startMenu.run();
+                break;
+
+            default:
+                break;
         }
     }
 }

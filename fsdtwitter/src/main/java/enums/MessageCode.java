@@ -1,0 +1,18 @@
+package enums;
+
+public enum MessageCode {
+    // errors
+    ERROR_USER_ALREADY_EXISTS,
+    ERROR_USER_DOESNT_EXIST,
+    ERROR_WRONG_PASSWORD,
+    ERROR_POSTING_POST,
+
+
+    // oks
+    OK_SUCCESSFUL_REGISTER,
+    OK_SUCCESSFUL_LOGIN,
+    OK_SUCCESSFUL_POST,
+
+    POST_SENT,
+    NO_MORE_POSTS
+}

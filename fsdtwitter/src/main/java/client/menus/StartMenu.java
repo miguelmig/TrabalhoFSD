@@ -25,16 +25,17 @@ public class StartMenu extends Menu {
     @Override
     public void handleEvents() {
         Scanner s = new Scanner(System.in);
-        int res = s.nextInt();
+        String res = s.nextLine();
+
 
         switch (res) {
-            case 1:
+            case "1":
                 clear();
                 Menu loginMenu = new LoginMenu(this.client);
                 loginMenu.run();
                 break;
 
-            case 2:
+            case "2":
                 clear();
                 Menu registerMenu = new RegisterMenu(this.client);
                 registerMenu.run();
@@ -42,6 +43,7 @@ public class StartMenu extends Menu {
 
             default:
                 System.out.println("Input inválido");
+                this.run();
                 break;
         }
     }

@@ -28,31 +28,28 @@ public class MainMenu extends Menu {
     @Override
     public void handleEvents() {
         Scanner s = new Scanner(System.in);
-        int res = s.nextInt();
+        String res = s.nextLine();
 
         switch (res) {
-            case 1:
-                client.sendMessage(Client.MessageType.POST, null);
+            case "1":
                 Menu postMenu = new PostMenu(this.client);
                 postMenu.run();
                 break;
 
-            case 2:
-                client.sendMessage(Client.MessageType.GET_TOPICS, null);
+            case "2":
                 Menu topicsMenu = new TopicsMenu(this.client);
                 topicsMenu.run();
                 break;
 
-            case 3:
-                client.sendMessage(Client.MessageType.GET_LAST_POSTS, null);
+            case "3":
                 Menu lastPostsMenu = new LastPostsMenu(this.client);
                 lastPostsMenu.run();
                 break;
 
             default:
                 System.out.println("Input inválido");
+                this.run();
                 break;
         }
-
     }
 }

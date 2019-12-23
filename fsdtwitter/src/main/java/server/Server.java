@@ -1,29 +1,18 @@
 package server;
-import client.Client;
-import config.Config;
-import data.PostJournal;
-import data.UserJournal;
+import data.models.Post;
 import data.models.User;
-import handlers.AcceptHandler;
+import enums.MessageCode;
 import io.atomix.utils.net.Address;
 import net.*;
-import org.graalvm.compiler.lir.LIRInstruction;
 import spullara.nio.channels.FutureServerSocketChannel;
 import spullara.nio.channels.FutureSocketChannel;
 import utils.FutureLineBuffer;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.AsynchronousChannelGroup;
-import java.nio.channels.AsynchronousServerSocketChannel;
-import java.nio.channels.CompletionHandler;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 
 public class Server {
     //private static List<Process> processes = new ArrayList<>();
@@ -34,12 +23,12 @@ public class Server {
     private static FutureServerSocketChannel ssc;
     private static List<FutureLineBuffer> bufs = new ArrayList<>();
 
-    // Journals
-    private static UserJournal users;
-    private static PostJournal posts;
+    private static Map<String, User> users = new HashMap<>();
+    private static Map<Integer, Post> posts = new HashMap<>();
 
-    
-    private User currentUser;
+    private static int counter;
+
+    private static String currentUser;
 
     public static void main(String[] args) throws Exception {
 
@@ -48,6 +37,8 @@ public class Server {
         } else {
             port = Integer.parseInt(args[0]);
         }
+
+        counter = posts.size();
 
         ssc = new FutureServerSocketChannel();
         ssc.bind(new InetSocketAddress(port));
@@ -80,14 +71,15 @@ public class Server {
 
     private static CompletableFuture<String> onRead(FutureLineBuffer buf, String msg) {
 
-        handleClientMessage(msg);
         //System.out.println("Recebi mensagem do cliente: " + msg);
+        handleClientMessage(buf, msg);
+
 
         return buf.readLine()
                 .thenCompose(newMsg -> onRead(buf, newMsg));
     }
 
-    private static void handleClientMessage(String msg) {
+    private static void handleClientMessage(FutureLineBuffer buf, String msg) {
 
         String[] tokens = msg.split(" ", 2);
 
@@ -95,23 +87,23 @@ public class Server {
         String content = tokens[1];
         switch (messageType) {
             case "/register":
-                handleRegister(content);
+                handleRegister(buf, content);
                 break;
 
             case "/login":
-                handleLogin(content);
+                handleLogin(buf, content);
                 break;
 
             case "/post":
-                handlePost(content);
+                handlePost(buf, content);
                 break;
 
             case "/get_topics":
-                handleGetTopics(content);
+                handleGetTopics(buf, content);
                 break;
 
             case "/get_last_posts":
-                handleGetLastPosts(content);
+                handleGetLastPosts(buf, content);
                 break;
 
             default:
@@ -119,45 +111,82 @@ public class Server {
         }
     }
 
-    private static void handleRegister(String content) {
-        /*
-         * Verificar se o nome de utilizador já existe
-         * Se não existe:
-         *      - regista o utilizador no user journal
-         *      - envia mensagem ao cliente a confirmar o registo
-         *      - envia mensagem aos outros servidores com a informação deste
-         *      utilizador para estes atualizarem os seus journals
-         *
-         * Se já existe:
-         *      - envia mensagem ao cliente a dizer que o username já existe
-         */
+    private static void handleRegister(FutureLineBuffer buf, String content) {
+
+        String[] tokens = content.split(" ");
+
+        String username = tokens[0];
+        String password = tokens[1];
+        if (users.containsKey(username)) {
+            buf.writeln(MessageCode.ERROR_USER_ALREADY_EXISTS.name());
+        } else {
+            buf.writeln(MessageCode.OK_SUCCESSFUL_REGISTER.name());
+
+            User newUser = new User(username, password, new ArrayList<>());
+            users.put(username, newUser);
+
+            //TODO : enviar mensagem aos restantes servidores com o newUser
+        }
     }
 
-    private static void handleLogin(String content) {
-        /*
-         * Verificar se o nome e a password do utilizador estão corretas
-         */
+
+    private static void handleLogin(FutureLineBuffer buf, String content) {
+
+        String[] tokens = content.split(" ");
+
+        String username = tokens[0];
+        String password = tokens[1];
+
+        if (users.containsKey(username)) {
+
+            User u = users.get(username);
+            if (u.getPassword().equals(password)) {
+                buf.writeln(MessageCode.OK_SUCCESSFUL_LOGIN.name());
+                currentUser = username;
+            } else {
+                buf.writeln(MessageCode.ERROR_WRONG_PASSWORD.name());
+            }
+
+        } else {
+            buf.writeln(MessageCode.ERROR_USER_DOESNT_EXIST.name());
+        }
     }
 
-    private static void handlePost(String content) {
-        /*
-         * Registar o post no post journal
-         * Enviar mensagem aos outros servidores para estes atualizarem os seus
-         * journals com este post
-         */
+    private static void handlePost(FutureLineBuffer buf, String content) {
+
+        String[] tokens = content.split("::");
+
+        String text = tokens[0];
+        List<String> tags = Arrays.asList(tokens[1].split(" "));
+
+        Post newPost = new Post(counter, text, tags, currentUser);
+        posts.put(counter, newPost);
+        counter++;
+
+        buf.writeln(MessageCode.OK_SUCCESSFUL_POST.name());
+
+        // TODO: Enviar mensagem aos restantes servidores com o newPost
     }
 
-    private static void handleGetTopics(String content) {
+    private static void handleGetTopics(FutureLineBuffer buf, String content) {
         /*
          * Ir ao journal buscar a lista de tópicos subscrita pelo o utilizador
          */
     }
 
-    private static void handleGetLastPosts(String content) {
+    private static void handleGetLastPosts(FutureLineBuffer buf, String content) {
         /*
          * Ir ao post journal buscar os ultimos 10 posts com os tópicos subscritos
          * pelo o utilizador
          */
+
+        String msg = posts.values().stream()
+                .limit(10)
+                .map(Post::toString)
+                .collect(Collectors.toList())
+                .toString();
+
+        buf.writeln(msg);
     }
 
 
@@ -177,7 +206,9 @@ public class Server {
         System.out.println("Delivering message!");
     }
 
+    public static void SendClientMessage(String msg) {
 
+    }
 
 }
 

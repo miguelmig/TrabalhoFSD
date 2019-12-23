@@ -6,12 +6,12 @@ public class User {
 
     private String name;
     private String password;
-    private List<String> subTags;
+    private List<String> subscribedTags;
 
     public User(String name, String password, List<String> subTags) {
         this.name = name;
         this.password = password;
-        this.subTags = subTags;
+        this.subscribedTags = subTags;
     }
 
     public String getName() {
@@ -23,7 +23,10 @@ public class User {
     }
 
     public List<String> getTags() {
-        return this.subTags;
+        return this.subscribedTags;
     }
 
+    public void addTags(List<String> newTags) {
+        subscribedTags.addAll(newTags);
+    }
 }

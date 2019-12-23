@@ -15,7 +15,8 @@ public class StartMenu extends Menu {
     @Override
     public void display() {
         StringBuilder str = new StringBuilder();
-        str.append("Select one option:\n")
+        str.append("-------- START MENU --------\n")
+                .append("Select one option:\n")
                 .append("1. Login\n")
                 .append("2. Register");
 
@@ -24,9 +25,9 @@ public class StartMenu extends Menu {
 
     @Override
     public void handleEvents() {
+
         Scanner s = new Scanner(System.in);
         String res = s.nextLine();
-
 
         switch (res) {
             case "1":
@@ -47,6 +48,4 @@ public class StartMenu extends Menu {
                 break;
         }
     }
-
-
 }

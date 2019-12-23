@@ -19,8 +19,10 @@ public class MainMenu extends Menu {
         str.append("-------- MAIN MENU --------\n")
                 .append("O que deseja fazer?\n")
                 .append("1. Publicar uma mensagem\n")
-                .append("2. Consultar lista de tópicos subscrita\n")
-                .append("3. Consultar as últimas mensagens enviadas para os tópicos subscritos");
+                .append("2. Subscrever tópicos\n")
+                .append("3. Consultar lista de tópicos subscrita\n")
+                .append("4. Consultar as últimas mensagens " +
+                        "enviadas para os tópicos subscritos");
 
         System.out.println(str);
     }
@@ -37,11 +39,16 @@ public class MainMenu extends Menu {
                 break;
 
             case "2":
+                Menu subscribeMenu = new SubscribeMenu(this.client);
+                subscribeMenu.run();
+                break;
+
+            case "3":
                 Menu topicsMenu = new TopicsMenu(this.client);
                 topicsMenu.run();
                 break;
 
-            case "3":
+            case "4":
                 Menu lastPostsMenu = new LastPostsMenu(this.client);
                 lastPostsMenu.run();
                 break;

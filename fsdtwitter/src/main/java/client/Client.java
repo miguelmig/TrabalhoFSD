@@ -20,6 +20,7 @@ public class Client {
         REGISTER,
         LOGIN,
         POST,
+        SUBSCRIBE,
         GET_TOPICS,
         GET_LAST_POSTS
     }
@@ -108,6 +109,10 @@ public class Client {
 
             case POST:
                 msg.append("/post ");
+                break;
+
+            case SUBSCRIBE:
+                msg.append("/subscribe ");
                 break;
 
             case GET_TOPICS:

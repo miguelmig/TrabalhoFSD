@@ -98,6 +98,10 @@ public class Server {
                 handlePost(buf, content);
                 break;
 
+            case "/subscribe":
+                handleSubscribe(buf, content);
+                break;
+
             case "/get_topics":
                 handleGetTopics(buf, content);
                 break;
@@ -168,23 +172,36 @@ public class Server {
         // TODO: Enviar mensagem aos restantes servidores com o newPost
     }
 
+    private static void handleSubscribe(FutureLineBuffer buf, String content) {
+
+        String[] tokens = content.split(" ");
+
+        List<String> tags = Arrays.asList(tokens);
+
+        users.get(currentUser).addTags(tags);
+
+        buf.writeln(MessageCode.OK_SUCCESSFUL_SUBSCRIBE.name());
+    }
+
     private static void handleGetTopics(FutureLineBuffer buf, String content) {
-        /*
-         * Ir ao journal buscar a lista de tópicos subscrita pelo o utilizador
-         */
+
+        String msg = String.join("::", users.get(currentUser).getTags());
+
+        buf.writeln(msg);
     }
 
     private static void handleGetLastPosts(FutureLineBuffer buf, String content) {
-        /*
-         * Ir ao post journal buscar os ultimos 10 posts com os tópicos subscritos
-         * pelo o utilizador
-         */
+
+        List<String> subscribedTags = users.get(currentUser).getTags();
 
         String msg = posts.values().stream()
+                .filter(post -> post.getTags().stream()
+                        .anyMatch(subscribedTags::contains)
+                )
+                .sorted(Comparator.comparing(Post::getDate).reversed())
                 .limit(10)
                 .map(Post::toString)
-                .collect(Collectors.toList())
-                .toString();
+                .collect(Collectors.joining("::"));
 
         buf.writeln(msg);
     }

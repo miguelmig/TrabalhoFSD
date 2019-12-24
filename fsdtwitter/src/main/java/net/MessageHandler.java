@@ -9,9 +9,12 @@ import io.atomix.utils.serializer.Serializer;
 import io.atomix.utils.serializer.SerializerBuilder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import data.models.*;
@@ -29,6 +32,10 @@ public class MessageHandler
     private ScheduledExecutorService executor;
     private Serializer s;
 
+    private int leaderID = -1;
+    private boolean leader_election_started = false;
+    private Map<Address, LeaderElectionMessage> leaders = new HashMap<>();
+
     public MessageHandler(int port)
     {
         executor = new ScheduledThreadPoolExecutor(1);
@@ -38,9 +45,14 @@ public class MessageHandler
         s = new SerializerBuilder()
                 .addType(Message.class)
                 .addType(Post.class)
+                .addType(LeaderElectionMessage.class)
                 .build();
 
         registerMessage("state");
+
+        // Internal operations related to Leader Election
+        registerMessage("start");
+        registerMessage("leader");
 
         /*
         ms.registerHandler("publish", (addr, data) -> {
@@ -55,6 +67,41 @@ public class MessageHandler
         }, executor);
         */
 
+    }
+
+    public void startLeaderElectionProcess()
+    {
+        leader_election_started = true;
+        leaders.clear();
+        sendStartLeaderMessage();
+        executor.schedule(this::electLeader, Config.LEADER_CHOOSE_TIME, TimeUnit.SECONDS);
+    }
+
+    private void electLeader()
+    {
+        int ranking = -1;
+        int process_id = -1;
+        for (Map.Entry<Address, LeaderElectionMessage> entry : leaders.entrySet())
+        {
+            if(entry.getValue().ranking > ranking) {
+                ranking = entry.getValue().ranking;
+                process_id = getProcessId(entry.getKey());
+            }
+        };
+
+        if(process_id == -1 || ranking == -1)
+        {
+            System.err.println("Unable to choose a leader! No one candidated!");
+            return;
+        }
+
+        leader_election_started = false;
+        leaderID = process_id;
+    }
+
+    private void sendStartLeaderMessage()
+    {
+        broadcastMessage("start", s.encode(null));
     }
 
     public void startMessageHandler()
@@ -109,18 +156,48 @@ public class MessageHandler
         return false;
     }
 
+    public int getProcessId(Address addr)
+    {
+        if(!isServer(addr))
+            return -1;
+        return addr.port() - Config.ADDR_START;
+    }
+
     public void onDeliverMessage(String message_type, Address addr, Message msg)
     {
-        int process_id = addr.port() - Config.ADDR_START;
+        int process_id = getProcessId(addr);
         delivered[process_id] = msg.getVectorClock()[process_id];
 
-        Server.DeliverMsg(message_type, addr, msg);
+        // Handling internal messages related to leader election
+        if(message_type.equals("start"))
+        {
+
+        }
+        else if(message_type.equals("leader"))
+        {
+
+        }
+        else
+        {
+            Server.DeliverMsg(message_type, addr, msg);
+        }
     }
 
     public void broadcastMessage(String message_type, byte[] msg)
     {
         Message wrapper = new Message();
-        //wrapper.setVectorClock();
+        int my_process_id = port - Config.ADDR_START;
+        delivered[my_process_id] = delivered[my_process_id] + 1;
+        wrapper.setVectorClock(delivered);
+        wrapper.setContent(msg);
+
+
+        for(int k = 0; k < Config.MAX_PROCESSES; k++)
+        {
+            ms.sendAsync(Address.from(Config.ADDR_START + k),
+                    message_type,
+                    s.encode(wrapper));
+        }
     }
 
 }

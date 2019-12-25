@@ -6,6 +6,8 @@ import data.UserJournal;
 import data.models.Post;
 import data.models.User;
 import enums.MessageCode;
+import io.atomix.storage.journal.Journal;
+import io.atomix.storage.journal.SegmentedJournal;
 import io.atomix.utils.net.Address;
 import net.*;
 import spullara.nio.channels.FutureServerSocketChannel;
@@ -34,6 +36,9 @@ public class Server {
 
     private static Map<String, User> users = new HashMap<>();
     private static Map<Integer, Post> posts = new HashMap<>();
+
+    private static SegmentedJournal<StateMessage> log;
+    private static boolean canCommit = true;
 
     private static int counter;
 
@@ -142,7 +147,7 @@ public class Server {
 
             User newUser = new User(username, password, new ArrayList<>());
             users.put(username, newUser);
-            System.out.println("Register sucessfull!");
+            System.out.println("Register sucessful!");
             //TODO : enviar mensagem aos restantes servidores com o newUser
             onStateChange();
         }
@@ -311,12 +316,14 @@ public class Server {
     public static void onStateChange()
     {
         System.out.println("State changed, broadcasting!");
+        canCommit = false;
         broadcastState();
         if(leader_id == port - Config.ADDR_START)
         {
             System.out.println("We're the leader, updating journals!");
             saveState();
         }
+        canCommit = true;
     }
 
 }

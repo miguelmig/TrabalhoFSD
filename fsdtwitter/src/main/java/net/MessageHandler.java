@@ -59,6 +59,8 @@ public class MessageHandler
                 .build();
 
         registerMessage("state");
+        registerMessage("user");
+        registerMessage("post");
 
         // Internal operations related to Leader Election
         registerMessage("start");

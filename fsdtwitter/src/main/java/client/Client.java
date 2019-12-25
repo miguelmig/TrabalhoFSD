@@ -16,6 +16,7 @@ public class Client {
 
     private static FutureSocketChannel socketChannel;
     private static FutureLineBuffer buf;
+    private static int port;
 
     public enum MessageType {
         REGISTER,
@@ -27,6 +28,12 @@ public class Client {
     }
 
     public static void main(String[] args) throws Exception {
+
+        if (args.length < 1) {
+            port = 8000;
+        } else {
+            port = Integer.parseInt(args[0]);
+        }
 
         Client client = new Client();
 
@@ -76,7 +83,7 @@ public class Client {
     private CompletableFuture<Void> connectToServer(String hostname) throws Exception {
 
         socketChannel = new FutureSocketChannel();
-        SocketAddress serverAddress = new InetSocketAddress(hostname, 8000 + Config.CLIENT_PORT_OFFSET);
+        SocketAddress serverAddress = new InetSocketAddress(hostname, port + Config.CLIENT_PORT_OFFSET);
 
         return socketChannel.connect(serverAddress);
     }

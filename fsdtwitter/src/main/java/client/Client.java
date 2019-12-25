@@ -2,6 +2,7 @@ package client;
 
 import client.menus.Menu;
 import client.menus.StartMenu;
+import config.Config;
 import spullara.nio.channels.FutureSocketChannel;
 import utils.FutureLineBuffer;
 
@@ -75,7 +76,7 @@ public class Client {
     private CompletableFuture<Void> connectToServer(String hostname) throws Exception {
 
         socketChannel = new FutureSocketChannel();
-        SocketAddress serverAddress = new InetSocketAddress(hostname, 8000);
+        SocketAddress serverAddress = new InetSocketAddress(hostname, 8000 + Config.CLIENT_PORT_OFFSET);
 
         return socketChannel.connect(serverAddress);
     }

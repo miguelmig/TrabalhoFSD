@@ -1,4 +1,8 @@
 package server;
+import config.Config;
+import config.JournalConfig;
+import data.PostJournal;
+import data.UserJournal;
 import data.models.Post;
 import data.models.User;
 import enums.MessageCode;
@@ -8,9 +12,14 @@ import spullara.nio.channels.FutureServerSocketChannel;
 import spullara.nio.channels.FutureSocketChannel;
 import utils.FutureLineBuffer;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -30,6 +39,11 @@ public class Server {
 
     private static String currentUser;
 
+    // Client requests can only be handled after the state is loaded in this server
+    private static boolean is_state_loaded = false;
+
+    private static int leader_id = -1;
+
     public static void main(String[] args) throws Exception {
 
         if (args.length < 1) {
@@ -38,23 +52,23 @@ public class Server {
             port = Integer.parseInt(args[0]);
         }
 
-        counter = posts.size();
-
-        ssc = new FutureServerSocketChannel();
-        ssc.bind(new InetSocketAddress(port));
-
-        System.out.println("Server listening on port " + port);
-        ssc.accept()
-                .thenAccept(Server::onAccept);
-
-        while (true) {
-            Thread.sleep(1000);
+        boolean startLeaderElection = false;
+        if(args.length > 1)
+        {
+            startLeaderElection = Integer.parseInt(args[1]) != 0;
         }
+
+
+
         //BuildProcessList();
+        ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+        mh = new MessageHandler(port, executor);
+        mh.startMessageHandler();
+        if(startLeaderElection)
+            mh.startLeaderElectionProcess();
 //
-        ////mh = new MessageHandler(port);
-//
-        ////mh.startMessageHandler();
+
+        executor.awaitTermination(60*60*24*7, TimeUnit.SECONDS);
     }
 
     private static void onAccept(FutureSocketChannel sc) {
@@ -71,7 +85,7 @@ public class Server {
 
     private static CompletableFuture<String> onRead(FutureLineBuffer buf, String msg) {
 
-        //System.out.println("Recebi mensagem do cliente: " + msg);
+        System.out.println("Recebi mensagem do cliente: " + msg);
         handleClientMessage(buf, msg);
 
 
@@ -128,8 +142,9 @@ public class Server {
 
             User newUser = new User(username, password, new ArrayList<>());
             users.put(username, newUser);
-
+            System.out.println("Register sucessfull!");
             //TODO : enviar mensagem aos restantes servidores com o newUser
+            onStateChange();
         }
     }
 
@@ -170,6 +185,7 @@ public class Server {
         buf.writeln(MessageCode.OK_SUCCESSFUL_POST.name());
 
         // TODO: Enviar mensagem aos restantes servidores com o newPost
+        onStateChange();
     }
 
     private static void handleSubscribe(FutureLineBuffer buf, String content) {
@@ -179,6 +195,7 @@ public class Server {
         List<String> tags = Arrays.asList(tokens);
 
         users.get(currentUser).addTags(tags);
+        onStateChange();
 
         buf.writeln(MessageCode.OK_SUCCESSFUL_SUBSCRIBE.name());
     }
@@ -223,8 +240,83 @@ public class Server {
         System.out.println("Delivering message!");
     }
 
+    public static void onLeaderElected(int leader_id)
+    {
+        try
+        {
+            Server.leader_id = leader_id;
+            ssc = new FutureServerSocketChannel();
+            ssc.bind(new InetSocketAddress(port + Config.CLIENT_PORT_OFFSET));
+
+            System.out.println("Server listening on port " + (port + Config.CLIENT_PORT_OFFSET));
+            ssc.accept()
+                    .thenAccept(Server::onAccept);
+        }
+        catch(IOException e)
+        {
+            System.err.println("Error creating the client socket!");
+        }
+    }
+
+    public static void onStateReceived(StateMessage state)
+    {
+        // parse state message
+        users = state.users.stream().collect(Collectors.toMap(User::getName, Function.identity()));
+        posts = state.posts.stream().collect(Collectors.toMap(Post::getId, Function.identity()));
+
+        counter = posts.size();
+        is_state_loaded = true;
+        System.out.println("State loaded, users: " + users.size() + " posts: " + counter);
+    }
+
     public static void SendClientMessage(String msg) {
 
+    }
+
+    public static void loadState()
+    {
+        is_state_loaded = true;
+
+        // Load the states from the journals
+        PostJournal pj = new PostJournal(JournalConfig.getPostsLogName());
+        UserJournal uj = new UserJournal(JournalConfig.getUsersLogName());
+
+        users = uj.readAllJournal();
+        posts = pj.readAllJournal();
+        System.out.println("State loaded, users: " + users.size() + " posts: " + counter);
+
+        // Broadcast state to other servers
+        broadcastState();
+    }
+
+    public static void saveState()
+    {
+        // TODO: Save State to Journals if this is the leader process
+        PostJournal pj = new PostJournal(JournalConfig.getPostsLogName());
+        UserJournal uj = new UserJournal(JournalConfig.getUsersLogName());
+        pj.writeJournal(posts);
+        uj.writeJournal(users);
+
+    }
+
+    public static void broadcastState()
+    {
+        StateMessage state = new StateMessage();
+        state.users = new ArrayList<>(users.values());
+        state.posts = new ArrayList<>(posts.values());
+
+        mh.broadcastState(state);
+    }
+
+    public static void onStateChange()
+    {
+        System.out.println("State changed, broadcasting!");
+        broadcastState();
+        if(leader_id == port - Config.ADDR_START)
+        {
+            System.out.println("We're the leader, updating journals!");
+            saveState();
+        }
     }
 
 }

@@ -8,25 +8,32 @@ import io.atomix.utils.net.Address;
 import io.atomix.utils.serializer.Serializer;
 import io.atomix.utils.serializer.SerializerBuilder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import data.models.*;
+import org.apache.commons.math3.analysis.function.Add;
 import server.Server;
+
+import javax.swing.plaf.nimbus.State;
 
 public class MessageHandler
 {
+    class MessageWrapped
+    {
+        public String message_type;
+        public Address from;
+        public Message msg;
+    }
     private ManagedMessagingService ms;
     private int port;
 
     private int[] delivered = new int[Config.MAX_PROCESSES];
-    private List<Message> deliveryQueue = new ArrayList<>();
+    private List<MessageWrapped> deliveryQueue = new ArrayList<>();
     private List<Process> servers = new ArrayList<>();
     private List<Process> clients = new ArrayList<>();
     private ScheduledExecutorService executor;
@@ -36,16 +43,19 @@ public class MessageHandler
     private boolean leader_election_started = false;
     private Map<Address, LeaderElectionMessage> leaders = new HashMap<>();
 
-    public MessageHandler(int port)
+    public MessageHandler(int port, ScheduledExecutorService e)
     {
-        executor = new ScheduledThreadPoolExecutor(1);
+        executor = e;
         this.port = port;
         ms = new NettyMessagingService("twitter", Address.from(port), new MessagingConfig());
 
         s = new SerializerBuilder()
                 .addType(Message.class)
                 .addType(Post.class)
+                .addType(LocalDate.class)
+                .addType(User.class)
                 .addType(LeaderElectionMessage.class)
+                .addType(StateMessage.class)
                 .build();
 
         registerMessage("state");
@@ -71,9 +81,11 @@ public class MessageHandler
 
     public void startLeaderElectionProcess()
     {
+        System.out.println("Sending out start leader election message!");
         leader_election_started = true;
         leaders.clear();
         sendStartLeaderMessage();
+        broadcastMessage("leader", buildElectionMessage());
         executor.schedule(this::electLeader, Config.LEADER_CHOOSE_TIME, TimeUnit.SECONDS);
     }
 
@@ -95,8 +107,16 @@ public class MessageHandler
             return;
         }
 
+        System.out.println("Leader elected, server id: " + process_id);
         leader_election_started = false;
         leaderID = process_id;
+        Server.onLeaderElected(leaderID);
+        if(leaderID == getProcessId(Address.from(port)))
+        {
+            // We're the leader, we're responsible for loading the state from the journals
+            // And broadcasting it to other servers
+            Server.loadState();
+        }
     }
 
     private void sendStartLeaderMessage()
@@ -118,34 +138,76 @@ public class MessageHandler
                 int[] TS = msg.getVectorClock();
 
                 // Fifo Delivery
-                if(TS[process_id] - 1 != delivered[process_id] + 1)
+                if(addr.port() != port)
                 {
-                    // There's still messages to be received from process_id, let's queue this one.
-                    deliveryQueue.add(msg);
-                    return;
-                }
-
-                // Causal Delivery part2
-                for(int k = 0; k < Config.MAX_PROCESSES; k++)
-                {
-                    if(k != process_id)
+                    System.out.println("TS on receive message: " + message_type);
+                    for(int i = 0; i < Config.MAX_PROCESSES; i++)
                     {
-                        if(delivered[k] < TS[k])
-                        {
-                            deliveryQueue.add(msg);
-                            return;
+                        System.out.println("TS[" + i + "] = " + TS[i]);
+                    }
+
+
+                    if (TS[process_id] - 1 != delivered[process_id]) {
+                        // There's still messages to be received from process_id, let's queue this one.
+                        MessageWrapped msg_wrapped = new MessageWrapped();
+                        msg_wrapped.message_type = message_type;
+                        msg_wrapped.from = addr;
+                        msg_wrapped.msg = msg;
+                        deliveryQueue.add(msg_wrapped);
+                        System.out.println("Still messages to be received, TS: " + (TS[process_id] - 1) + " D:" + (delivered[process_id] + 1) + " from process: " + process_id);
+                        return;
+                    }
+
+                    // Causal Delivery part2
+                    for (int k = 0; k < Config.MAX_PROCESSES; k++) {
+                        if (k != process_id) {
+                            if (delivered[k] < TS[k]) {
+                                MessageWrapped msg_wrapped = new MessageWrapped();
+                                msg_wrapped.message_type = message_type;
+                                msg_wrapped.from = addr;
+                                msg_wrapped.msg = msg;
+                                deliveryQueue.add(msg_wrapped);
+                                return;
+                            }
                         }
                     }
                 }
 
                 onDeliverMessage(message_type, addr, msg);
 
-                // TODO: See if any messages on the delivery queue can be delivered now
+                tryDeliverMessages(process_id);
+
+
 
             }
         }, executor);
     }
 
+    void tryDeliverMessages(int process_id)
+    {
+        Iterator it = deliveryQueue.iterator();
+        while(it.hasNext())
+        {
+            MessageWrapped m = (MessageWrapped)it.next();
+            int[] TS = m.msg.getVectorClock();
+            if (TS[process_id] - 1 != delivered[process_id]) {
+                continue;
+            }
+
+            // Causal Delivery part2
+            for (int k = 0; k < Config.MAX_PROCESSES; k++) {
+                if (k != process_id) {
+                    if (delivered[k] < TS[k]) {
+                        continue;
+                    }
+                }
+            }
+            System.out.println("Delivering old message from: " + m.from + " TS[" + process_id + "]= " + TS[process_id]);
+            onDeliverMessage(m.message_type, m.from, m.msg);
+            deliveryQueue.remove(m);
+            tryDeliverMessages(process_id);
+        }
+    }
 
     public boolean isServer(Address addr)
     {
@@ -167,20 +229,50 @@ public class MessageHandler
     {
         int process_id = getProcessId(addr);
         delivered[process_id] = msg.getVectorClock()[process_id];
-
+        System.out.println("On Deliver: Set D[" + process_id + "] = " + delivered[process_id]);
         // Handling internal messages related to leader election
         if(message_type.equals("start"))
         {
+            System.out.println("Received start message for leader election");
+            if(!leader_election_started)
+            {
+                leader_election_started = true;
+                leaders.clear();
+                executor.schedule(this::electLeader, Config.LEADER_CHOOSE_TIME, TimeUnit.SECONDS);
+            }
+
+            if(addr.port() != port)
+                broadcastMessage("leader", buildElectionMessage());
 
         }
         else if(message_type.equals("leader"))
         {
-
+            LeaderElectionMessage electionMsg = s.decode(msg.getContent());
+            leaders.put(addr, electionMsg);
+        }
+        else if(message_type.equals("state"))
+        {
+            if(addr.port() != port) {
+                StateMessage stateMsg = s.decode(msg.getContent());
+                Server.onStateReceived(stateMsg);
+            }
         }
         else
         {
+            if(leaderID == -1)
+            {
+                // no leader, rejecting message.
+                return;
+            }
             Server.DeliverMsg(message_type, addr, msg);
         }
+    }
+
+    public byte[] buildElectionMessage()
+    {
+        LeaderElectionMessage payload = new LeaderElectionMessage();
+        payload.ranking = (int)ProcessHandle.current().pid();
+        return s.encode(payload);
     }
 
     public void broadcastMessage(String message_type, byte[] msg)
@@ -188,9 +280,9 @@ public class MessageHandler
         Message wrapper = new Message();
         int my_process_id = port - Config.ADDR_START;
         delivered[my_process_id] = delivered[my_process_id] + 1;
+        System.out.println("On Broadcast: " + message_type +" set D[" + my_process_id + "] = " + delivered[my_process_id]);
         wrapper.setVectorClock(delivered);
         wrapper.setContent(msg);
-
 
         for(int k = 0; k < Config.MAX_PROCESSES; k++)
         {
@@ -198,6 +290,12 @@ public class MessageHandler
                     message_type,
                     s.encode(wrapper));
         }
+    }
+
+    public void broadcastState(StateMessage state)
+    {
+        System.out.println("Broadcasting state!");
+        broadcastMessage("state", s.encode(state));
     }
 
 }

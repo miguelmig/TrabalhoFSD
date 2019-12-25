@@ -316,14 +316,12 @@ public class Server {
     public static void onStateChange()
     {
         System.out.println("State changed, broadcasting!");
-        canCommit = false;
         broadcastState();
         if(leader_id == port - Config.ADDR_START)
         {
             System.out.println("We're the leader, updating journals!");
             saveState();
         }
-        canCommit = true;
     }
 
 }

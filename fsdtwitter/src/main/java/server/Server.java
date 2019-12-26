@@ -1,6 +1,7 @@
 package server;
 import config.Config;
 import config.JournalConfig;
+import data.PersistentLog;
 import data.PostJournal;
 import data.UserJournal;
 import data.models.Post;
@@ -37,8 +38,7 @@ public class Server {
     private static Map<String, User> users = new HashMap<>();
     private static Map<Integer, Post> posts = new HashMap<>();
 
-    private static SegmentedJournal<StateMessage> log;
-    private static boolean canCommit = true;
+    private static PersistentLog persistentLog;
 
     private static int counter;
 
@@ -274,9 +274,6 @@ public class Server {
         System.out.println("State loaded, users: " + users.size() + " posts: " + counter);
     }
 
-    public static void SendClientMessage(String msg) {
-
-    }
 
     public static void loadState()
     {

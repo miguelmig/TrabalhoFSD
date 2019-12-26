@@ -56,29 +56,19 @@ public class MessageHandler
                 .addType(User.class)
                 .addType(LeaderElectionMessage.class)
                 .addType(StateMessage.class)
+                .addType(Boolean.class)
                 .build();
 
         registerMessage("state");
-        registerMessage("user");
-        registerMessage("post");
 
         // Internal operations related to Leader Election
         registerMessage("start");
         registerMessage("leader");
 
-        /*
-        ms.registerHandler("publish", (addr, data) -> {
-            if(isServer(addr))
-            {
-                System.err.println("Server isn't supposed to send publish!");
-                return;
-            }
-            Message msg = s.decode(data);
-            Post new_post = s.decode(msg.getContent());
 
-        }, executor);
-        */
-
+        // operations related to 2p commit
+        //registerMessage("can commit?");
+        //registerMessage("commit");
     }
 
     public void startLeaderElectionProcess()

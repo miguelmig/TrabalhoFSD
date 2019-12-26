@@ -1,25 +1,20 @@
 package net;
 
 import config.Config;
+import data.models.Post;
+import data.models.User;
 import io.atomix.cluster.messaging.ManagedMessagingService;
 import io.atomix.cluster.messaging.MessagingConfig;
 import io.atomix.cluster.messaging.impl.NettyMessagingService;
 import io.atomix.utils.net.Address;
 import io.atomix.utils.serializer.Serializer;
 import io.atomix.utils.serializer.SerializerBuilder;
+import server.Server;
 
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
-
-import data.models.*;
-import org.apache.commons.math3.analysis.function.Add;
-import server.Server;
-
-import javax.swing.plaf.nimbus.State;
 
 public class MessageHandler
 {
@@ -29,7 +24,9 @@ public class MessageHandler
         public Address from;
         public Message msg;
     }
+
     private ManagedMessagingService ms;
+    private ManagedMessagingService coordinatorMS;
     private int port;
 
     private int[] delivered = new int[Config.MAX_PROCESSES];
@@ -47,7 +44,24 @@ public class MessageHandler
     {
         executor = e;
         this.port = port;
-        ms = new NettyMessagingService("twitter", Address.from(port), new MessagingConfig());
+        ms = new NettyMessagingService(
+                "twitter",
+                Address.from(port),
+                new MessagingConfig());
+
+        // 2PCOMMIT
+        coordinatorMS = new NettyMessagingService(
+                "2pcommit",
+                Address.from(port),
+                new MessagingConfig());
+
+        coordinatorMS.registerHandler("prepared", ((address, bytes) -> {
+
+        }), e);
+
+
+
+
 
         s = new SerializerBuilder()
                 .addType(Message.class)

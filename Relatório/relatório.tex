@@ -33,25 +33,28 @@
 
 \tableofcontents
 
-
 \chapter{Introdução}
 Com o objetivo de aplicar os conhecimentos adquiridos nas aulas relativas à UC de Fundamentos de Sistemas Distribuídos, foi-nos proposto o desenvolvimento de um sistema de troca de mensagens com persistência e ordenação, inspirado na rede social \textit{Twitter}.
-
-\begin{itemize}
-    \item Contexto - done
-    \item Motivação
-    \item Objetivos
-    \item Organização do relatório
-\end{itemize}
-
-
-\chapter{Enunciado}
+O enunciado apresenta alguns \underline{requisitos} que devem ser respeitados:
+\begin{enumerate}
+    \item O sistema deve incluir um conjunto de servidores, que se conhecem todos entre si. Admite-se a possibilidade de um destes servidores ser reiniciado, devendo garantir que o sistema continua a funcionar depois de todos os servidores estarem novamente operacionais. O servidor não deve ter qualquer interação direta com o utilizador.
+    \item O sistema deve incluir clientes que se ligam a qualquer um dos servidores. Admite-se que o cliente pode ser reiniciado e ligado a um novo servidor. O cliente deve incluir uma interface rudimentar para interagir com o sistema, que deve ter algumas funcionalidades.
+    \item Admite-se que tanto os clientes como os servidores podem fazer uso da memória persistente.
+    \item O conjunto de mensagens obtido por cada cliente em cada operação deve refletir uma visão causalmente coerente das operações realizadas em todo o sistema, por esse ou outros utilizadores.
+    
+\end{enumerate}
 
 
-\chapter{Trabalhos Relacionados}
+
+Neste primeiro capítulo foi feita a contextualização e foram apresentados os objetivos deste projeto.
+De seguida, apresentamos uma proposta de solução, onde são descritas tanto as abordagens seguidas bem como as decisões tomadas para atingirmos os objetivos.
+No terceiro capítulo, descrevemos como chegamos à proposta de solução apresentada, com detalhes mais técnicos.
+Posto isto, no quarto capítulo, apresentamos o resultado final da aplicação acompanhdados com alguns testes realizados.
+Por fim, no quinto e último capítulo, sumarizamos o que foi escrito no relatório, e a nossa satisfação global com o projeto.
 
 
 \chapter{Proposta de Solução}
+
 \begin{itemize}
     \item Arquitetura do Sistema
 \end{itemize}

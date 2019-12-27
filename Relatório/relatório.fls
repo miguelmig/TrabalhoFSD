@@ -84,8 +84,6 @@ INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmr17.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT /Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.toc
 INPUT /Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.toc
-OUTPUT /Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.toc
-INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmti12.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmr8.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmr6.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmmi12.tfm
@@ -94,6 +92,10 @@ INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmmi6.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmsy10.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmsy8.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmsy6.tfm
+OUTPUT /Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.toc
+INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmti12.tfm
+INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmr17.tfm
+INPUT /usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT /usr/local/texlive/2019/texmf-dist/tex/latex/base/omscmr.fd
 INPUT /usr/local/texlive/2019/texmf-dist/tex/latex/base/omscmr.fd
 INPUT /Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.aux

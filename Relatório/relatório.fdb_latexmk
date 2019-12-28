@@ -1,7 +1,7 @@
 # Fdb version 3
-["pdflatex"] 1577545692 "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf" "relatório" 1577545706
-  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.aux" 1577545692 1723 ac8d0915625382cd2890f8a8611a5d5e ""
-  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" 1577545706 6405 9731bf4f3d2d73e0d890806d6c490c98 ""
+["pdflatex"] 1577546581 "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf" "relatório" 1577546582
+  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.aux" 1577546582 1723 ac8d0915625382cd2890f8a8611a5d5e ""
+  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" 1577546581 6455 082ea1effa24ea32a7adb4249390a2d8 ""
   "/usr/local/texlive/2019/texmf-dist/fonts/map/fontname/texfonts.map" 1511824771 3332 103109f5612ad95229751940c61aada0 ""
   "/usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1136768653 1324 c910af8c371558dc20f2d7822f66fe64 ""
   "/usr/local/texlive/2019/texmf-dist/fonts/tfm/public/cm/cmbxti10.tfm" 1136768653 1532 9162035f4e7176612125649e348e2195 ""
@@ -61,13 +61,13 @@
   "/usr/local/texlive/2019/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1557342064 3277517 23507ed665b4dd9046f0f2a94bbef2be ""
   "/usr/local/texlive/2019/texmf-var/web2c/pdftex/pdflatex.fmt" 1562257513 4259635 b90538ef47e9b6a7eb5435939c4195a6 ""
   "/usr/local/texlive/2019/texmf.cnf" 1557341546 577 d150fef99ac436ad1156e86b0892f6ef ""
-  "relatório.aux" 1577545692 1723 ac8d0915625382cd2890f8a8611a5d5e "pdflatex"
-  "relatório.tex" 1577545706 6405 9731bf4f3d2d73e0d890806d6c490c98 ""
-  "relatório.toc" 1577545692 835 f8a055be91ca4519d112d5a4496c8d97 "pdflatex"
+  "relatório.aux" 1577546582 1723 ac8d0915625382cd2890f8a8611a5d5e "pdflatex"
+  "relatório.tex" 1577546581 6455 082ea1effa24ea32a7adb4249390a2d8 ""
+  "relatório.toc" 1577546582 835 f8a055be91ca4519d112d5a4496c8d97 "pdflatex"
   (generated)
-  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.log"
+  "relatório.aux"
   "relatório.log"
+  "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.log"
+  "relatório.toc"
   "relatório.pdf"
   "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf"
-  "relatório.toc"
-  "relatório.aux"

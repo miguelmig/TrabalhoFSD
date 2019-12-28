@@ -41,10 +41,7 @@ O enunciado apresenta alguns \underline{requisitos} que devem ser respeitados:
     \item O sistema deve incluir clientes que se ligam a qualquer um dos servidores. Admite-se que o cliente pode ser reiniciado e ligado a um novo servidor. O cliente deve incluir uma interface rudimentar para interagir com o sistema, que deve ter algumas funcionalidades.
     \item Admite-se que tanto os clientes como os servidores podem fazer uso da memória persistente.
     \item O conjunto de mensagens obtido por cada cliente em cada operação deve refletir uma visão causalmente coerente das operações realizadas em todo o sistema, por esse ou outros utilizadores.
-    
 \end{enumerate}
-
-
 
 Neste primeiro capítulo foi feita a contextualização e foram apresentados os objetivos deste projeto.
 De seguida, apresentamos uma proposta de solução, onde são descritas tanto as abordagens seguidas bem como as decisões tomadas para atingirmos os objetivos.
@@ -54,6 +51,12 @@ Por fim, no quinto e último capítulo, sumarizamos o que foi escrito no relató
 
 
 \chapter{Proposta de Solução}
+\section{Servidores}
+O sistema é composto por diversos servidores, que comunicam entre si através de mensagens de alteração de estado.
+
+Cada servidor tem informações acerca de \textbf{todos} os utilizadores e de \textbf{todos} as publicações.
+
+
 
 \begin{itemize}
     \item Arquitetura do Sistema

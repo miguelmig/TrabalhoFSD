@@ -40,6 +40,10 @@ public class MessageHandler
     private boolean leader_election_started = false;
     private Map<Address, LeaderElectionMessage> leaders = new HashMap<>();
 
+    private Set<Integer> available_servers = new HashSet<>();
+    private boolean in_heartbeat = false;
+    private boolean is_heartbeat_check_started = false;
+
     public MessageHandler(int port, ScheduledExecutorService e)
     {
         executor = e;
@@ -60,9 +64,6 @@ public class MessageHandler
         }), e);
 
 
-
-
-
         s = new SerializerBuilder()
                 .addType(Message.class)
                 .addType(Post.class)
@@ -78,6 +79,9 @@ public class MessageHandler
         // Internal operations related to Leader Election
         registerMessage("start");
         registerMessage("leader");
+
+        registerMessage("heartbeat");
+        registerMessage("heartbeat_ok");
 
 
         // operations related to 2p commit
@@ -123,6 +127,10 @@ public class MessageHandler
             // And broadcasting it to other servers
             Server.loadState();
         }
+        if(!is_heartbeat_check_started) {
+            executor.schedule(this::startHeatbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
+            is_heartbeat_check_started = true;
+        }
     }
 
     private void sendStartLeaderMessage()
@@ -146,22 +154,42 @@ public class MessageHandler
                 // Fifo Delivery
                 if(addr.port() != port)
                 {
+                    /*
                     System.out.println("TS on receive message: " + message_type);
                     for(int i = 0; i < Config.MAX_PROCESSES; i++)
                     {
                         System.out.println("TS[" + i + "] = " + TS[i]);
                     }
+                    */
 
+                    int remote_clock = TS[process_id] - 1;
+                    int local_clock = delivered[process_id];
+                    if(local_clock == 0 && remote_clock > local_clock && remote_clock - local_clock > Config.TS_DIFF_PROBABLY_RESTART)
+                    {
+                        // It's likely this process restarted and therefore we should believe on remote clocks for now.
+                        // Maybe let's believe its remote clock of our process is also correct
+                        //delivered[getProcessId(port)] = TS[getProcessId(port)];
+                        delivered = TS;
+                        for(int i = 0; i < delivered.length; i++)
+                        {
+                            delivered[i] = delivered[i] - 1;
+                        }
 
-                    if (TS[process_id] - 1 != delivered[process_id]) {
-                        // There's still messages to be received from process_id, let's queue this one.
-                        MessageWrapped msg_wrapped = new MessageWrapped();
-                        msg_wrapped.message_type = message_type;
-                        msg_wrapped.from = addr;
-                        msg_wrapped.msg = msg;
-                        deliveryQueue.add(msg_wrapped);
-                        System.out.println("Still messages to be received, TS: " + (TS[process_id] - 1) + " D:" + (delivered[process_id] + 1) + " from process: " + process_id);
-                        return;
+                    }
+                    else
+                    {
+                        if (remote_clock != local_clock)
+                        {
+                            // There's still messages to be received from process_id, let's queue this one.
+                            MessageWrapped msg_wrapped = new MessageWrapped();
+                            msg_wrapped.message_type = message_type;
+                            msg_wrapped.from = addr;
+                            msg_wrapped.msg = msg;
+                            deliveryQueue.add(msg_wrapped);
+                            System.out.println("Still messages to be received, TS: " + (TS[process_id] - 1) + " D:" + (delivered[process_id]) + " from process: " + process_id);
+                            tryDeliverMessages(process_id);
+                            return;
+                        }
                     }
 
                     // Causal Delivery part2
@@ -173,6 +201,7 @@ public class MessageHandler
                                 msg_wrapped.from = addr;
                                 msg_wrapped.msg = msg;
                                 deliveryQueue.add(msg_wrapped);
+                                tryDeliverMessages(process_id);
                                 return;
                             }
                         }
@@ -182,7 +211,6 @@ public class MessageHandler
                 onDeliverMessage(message_type, addr, msg);
 
                 tryDeliverMessages(process_id);
-
 
 
             }
@@ -231,7 +259,12 @@ public class MessageHandler
         return addr.port() - Config.ADDR_START;
     }
 
-    public void onDeliverMessage(String message_type, Address addr, Message msg)
+    public int getProcessId(int port)
+    {
+        return port - Config.ADDR_START;
+    }
+
+    public synchronized void onDeliverMessage(String message_type, Address addr, Message msg)
     {
         int process_id = getProcessId(addr);
         delivered[process_id] = msg.getVectorClock()[process_id];
@@ -261,6 +294,19 @@ public class MessageHandler
             if(addr.port() != port) {
                 StateMessage stateMsg = s.decode(msg.getContent());
                 Server.onStateReceived(stateMsg);
+            }
+        }
+        else if(message_type.equals("heartbeat"))
+        {
+            // Request for heartbeat, let's answer
+            broadcastMessage("heartbeat_ok", s.encode(null));
+        }
+        else if(message_type.equals("heartbeat_ok"))
+        {
+            if(in_heartbeat)
+            {
+                available_servers.add(getProcessId(addr));
+                System.out.println("Got heartbeat response from " + getProcessId(addr));
             }
         }
         else
@@ -302,6 +348,54 @@ public class MessageHandler
     {
         System.out.println("Broadcasting state!");
         broadcastMessage("state", s.encode(state));
+    }
+
+    private synchronized void startHeatbeatCheck()
+    {
+        available_servers.clear();
+        broadcastMessage("heartbeat", s.encode(null));
+        in_heartbeat = true;
+        System.out.println("Starting heartbeat check");
+        executor.schedule(this::checkHeartbeatResponses, Config.HEARTBEAT_REPONSE_TIME, TimeUnit.SECONDS);
+    }
+
+    private synchronized void checkHeartbeatResponses()
+    {
+        boolean isLeaderUp = false;
+
+        System.out.println("Available servers...");
+        for(Integer server_id : available_servers)
+        {
+            System.out.println(server_id + "..");
+            if(server_id == leaderID)
+            {
+                isLeaderUp = true;
+                break;
+            }
+        }
+
+        boolean restarted = false;
+        for(int i = 0; i < delivered.length; i++)
+        {
+            if(!available_servers.contains(i))
+            {
+                restarted = true;
+            }
+        }
+
+        if(restarted)
+        {
+            System.out.println("A server has restarted, let's wait for leader election to proceed");
+            leaderID = -1;
+            for(int i = 0; i < delivered.length; i++)
+            {
+                delivered[i] = 0;
+            }
+        }
+        else {
+            in_heartbeat = false;
+            executor.schedule(this::startHeatbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
+        }
     }
 
 }

@@ -1,4 +1,6 @@
 \documentclass[12pt, a4paper]{report}
+\setcounter{secnumdepth}{3}
+
 \usepackage[a4paper, total={6in, 10in}]{geometry}
 
 \usepackage[portuges]{babel}
@@ -51,8 +53,49 @@ Por fim, no quinto e último capítulo, sumarizamos o que foi escrito no relató
 
 
 \chapter{Proposta de Solução}
-\section{Servidores}
+\section{Sistema}
+Muito abstratamente, o sistema é composto por um conjunto de servidores que comunicam entre si através de mensagens (principalmente de estado), e por clientes que se ligam a estes servidores.
 
+Um bom e consistente funcionamento do sistema depende de uma igualmente boa capacidade de organização e coordenação por parte dos servidores, o que requer a utilização de algumas técnicas e propriedades, nomeadamente:
+
+\begin{itemize}
+    \item \underline{\textit{Leader election}} - é o processo de eleger um servidor como o organizador das tarefas que são distribuídas por todos os servidores. É essencial para o sistema adquirir a capacidade de organização desejada.
+    \item \underline{\textit{Causal delivery}} - é uma abstração usada para garantir que as mensagens são enviadas numa ordem que respeita a relação \textit{happened-before}, que diz que se um evento deve acontecer antes de outro, o resultado destes eventos também deve refletir isso. Esta propriedade é o que permite o sistema ter informação consistente e ser coordenado.
+    \item \underline{\textit{Two phase commit}} - \textbf{ainda não sei se é para meter}
+\end{itemize}
+
+Os servidores comunicam apenas por mensagens, logo é com estas que o sistema tem de conseguir implementar as técnicas referidas. De modo a que seja possível conseguir diferentes fins, é necessária a existência de diferentes tipos de mensagens, como iremos ver a seguir.
+
+Outro aspeto fundamental no sistema é a relação servidor-cliente. 
+Um servidor tem de ser capaz de hospedar diversos clientes, comunicar com eles, e alterar o seu estado consoante os pedidos efetuados por eles.
+
+
+\subsection{Mensagens}
+As mensagens enviadas entre servidores têm 2 campos.
+\begin{itemize}
+    \item \textit{Vector Clock} - é um vetor de $N$ relógios lógicos (um relógio por servidor). Com este vetor é possível implementar o algoritmo dos \textit{vector clocks} que por sua vez assegura a \textit{causal delivery} referida acima.
+    \item \textit{Conteúdo} - o conteúdo da mensagem em si.
+\end{itemize}
+
+Como foi referido anteriormente, as mensagens têm diferentes funcionalidades e, consoante estas, estão divididas em diferentes tipos.
+
+\subsubsection{Mensagens de estado}
+Sempre que um servidor efetua uma alteração no estado, é suposto notificar os outros servidores de modo a que estes se atualizem, e assim se garanta a consistência de informação.
+As mensagens de estado são as responsáveis por esta notificação, de tal forma que o conteúdo que é enviado é o estado do servidor após as alterações.
+
+Os outros servidores, ao receberem uma mensagem deste tipo, extraem o conteúdo e atualizam o seu próprio estado consoante este conteúdo.
+
+
+\subsubsection{Mensagens para a \textit{Leader Election}}
+Mensagens para a eleição de líder.
+
+\subsubsection{Heartbeat}
+
+
+\section{Servidor}
+
+
+\section{Cliente}
 
 
 

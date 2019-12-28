@@ -85,8 +85,8 @@ public class MessageHandler
 
 
         // operations related to 2p commit
-        //registerMessage("can commit?");
-        //registerMessage("commit");
+        // registerMessage("can commit?");
+        // registerMessage("commit");
     }
 
     public void startLeaderElectionProcess()
@@ -128,7 +128,7 @@ public class MessageHandler
             Server.loadState();
         }
         if(!is_heartbeat_check_started) {
-            executor.schedule(this::startHeatbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
+            executor.schedule(this::startHeartbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
             is_heartbeat_check_started = true;
         }
     }
@@ -350,7 +350,7 @@ public class MessageHandler
         broadcastMessage("state", s.encode(state));
     }
 
-    private synchronized void startHeatbeatCheck()
+    private synchronized void startHeartbeatCheck()
     {
         available_servers.clear();
         broadcastMessage("heartbeat", s.encode(null));
@@ -394,7 +394,7 @@ public class MessageHandler
         }
         else {
             in_heartbeat = false;
-            executor.schedule(this::startHeatbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
+            executor.schedule(this::startHeartbeatCheck, Config.HEARTBEAT_INTERVAL_TIME, TimeUnit.SECONDS);
         }
     }
 

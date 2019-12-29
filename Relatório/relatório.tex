@@ -92,36 +92,94 @@ No sistema, o líder é o processo com o maior $id$.
 Cada servidor começa por enviar uma mensagem a todos os outros com o seu $id$.
 Quando recebidas todas as mensagens, os servidores pegam no maior $id$ recebido, e elegem-no como líder.
 
+O servidor líder está responsável por ler e guardar o estado global. No ínicio de cada execução do sistema, depois de eleito o líder, este lê o estado guardado de execuções anteriores, coloca-o como o seu estado, e envia-o aos restantes servidores.
+
 \subsubsection{Heartbeat}
-Falar do heartbeat
+As mensagens de \textit{heartbeat} servem para saber se algum servidor deixou de funcionar.
+
+A cada segundo, o todos os servidores mandam mensagem aos restantes a perguntar se estão ``vivos'', e aguardam por resposta.
+Caso algum servidor não responda, o sistema espera que este reinicie, e reinicia a execução.
 
 \section{Servidor}
-\begin{itemize}
-    \item falar do estado, atualizações etc
-    \item responsável pela conexão dos clientes
-    \item tipos de mensagens que envia aos clientes
-\end{itemize}
+\subsection{Conexão com o cliente}
+Os servidores estão responsáveis pela conexão dos clientes. Uma vez realizada a conexão, o servidor tem a capacidade de comunicar com o cliente conetado.
+
+Esta comunicação é essencial porque permite que o servidor envie informação ao cliente.
+Estas mensagens podem ser avisos (ex.: \textit{Registo efetuado com sucesso}; \textit{Erro: password errada}; \textit{Publicação efetuada com sucesso}), como podem ser respostas a pedidos do cliente (ex.: Enviar a lista de tópicos a que um utilizador está subscrito).
+Mas como é que um servidor sabe que a \textit{password} está errada, ou que tópicos é que um utilizador está subscrito? 
+
+\subsection{Estado}
+Cada servidor possui um estado que contém a informação acerca dos utilizadores e das publicações do sistema.
+Com isto, um servidor não só consegue ter controlo sobre autenticação, como consegue responder a pedidos de consulta de um cliente. Adicionalmente, pode acrescentar nova informação ao sistema.
 
 \section{Cliente}
-\begin{itemize}
-    \item Coneta-se a um servidor
-    \item falar das funcionalidades
-    \item POST e GET requests
-\end{itemize}
+\section{Conexão ao servidor}
+O cliente está responsável por conetar-se a um servidor. Uma vez feita a conexão o cliente consegue comunicar com o respetivo servidor.
+Isto faz com que o cliente possa enviar (receber) mensagens ao (do) servidor que permitem implementar as funcionalidades a seguir descritas.
 
+\section{Funcionalidades}
+Um cliente tem as seguintes funcionalidades:
+\begin{itemize}
+    \item Autenticação
+    \item Publicar uma mensagem etiquetada com um ou mais tópicos
+    \item Indicar qual a lista de tópicos subscrita
+    \item Obter as últimas 10 mensagens enviadas para tópicos subscritos
+\end{itemize}
 
 \chapter{Desenvolvimento}
 \section{Tecnologia}
-Falar do java, intellij e atomix
+O projeto foi desenvolvido com a ferramenta \texttt{IntelliJ}, que é um IDE utilizado para desenvolver \textit{software}.
+A linguagem utilizada foi o \texttt{Java}, com principal destaque na biblioteca \texttt{Atomix}.
+
+O \texttt{Atomix} é uma \textit{framework} orientada a eventos destinada a desenvolver sistemas distribuídos. Fornece blocos de construção que resolvem muitos problemas de sistemas deste tipo, como por exemplo, mensagens assíncronas.
 
 \section{Implementação}
-Falar do código
+O código do sistema está dividido em \textit{packages}, onde cada \textit{package} está responsável por uma funcionalidade.
 
-\chapter{Resultado}
+
+\subsection{\textit{net}}
+O \textit{package} \texttt{net} está responsável pela parte distribuída do sistema.
+
+Em principal destaque está a classe \texttt{MessageHandler}, que trata da comunicação entre servidores, ou seja, da receção e interpretação das mensagens internas relacionadas com sistemas distribuídos.
+As mensagens são manuseadas através de um \texttt{NettyMessagingService}, que é uma classe do \texttt{Atomix}.
+
+É nesta classe que são implementadas a \textit{causal delivery}, \textit{leader election} e os \textit{heartbeats}.
+
+
+\subsection{\textit{server}}
+Neste \textit{package} está a classe \texttt{Server}, que representa um servidor do sistema.
+
+A classe \texttt{Server} tem várias variáveis de instância, sendo que em destaque estão:
 \begin{itemize}
-    \item Testes
-    \item Resultado
+    \item \texttt{mh} - \texttt{MessageHandler}, explicado na secção anterior;
+    \item \texttt{port} - é a porta do servidor;
+    \item \texttt{ssc} - \textit{server socket channel} da classe \texttt{FutureServerSocketChannel};
+    \item \texttt{users} - lista dos utilizadores;
+    \item \texttt{posts} - lista das publicações.
 \end{itemize}
+
+O \texttt{Server} começa por inicializar o \texttt{MessageHandler}, fazendo de seguida a eleição de líder.
+Após a eleição, o servidor recupera o último estado do sistema, que está guardado em \texttt{SegmentedJournals}, classe do \texttt{Atomix}, e guarda-o em memória no \texttt{users} e \texttt{posts}, enviando-os depois para os restantes servidores.
+
+De seguida cria o \texttt{FutureServerSocketChannel} para esperar conexões de clientes.
+Uma vez que um cliente esteja conetado, este e o servidor comunicam através de \texttt{FutureLineBuffer}s.
+
+Dependendo da mensagem recebida, o servidor pode ou não atualizar o \texttt{users} e o \texttt{posts}.
+
+
+
+\subsection{\textit{client}}
+Neste \textit{package} estão todas as classes relacionadas com o cliente, nomeadamente a classe \texttt{Client} e os menus da interface.
+
+Um cliente liga-se a um servidor através de um \texttt{FutureSocketChannel} e comunica com ele através de um \texttt{FutureLineBuffer}.
+
+Após se ligar ao servidor, faz \textit{display} do menu inicial.
+Consoante as ações que escolher nos menus, mensagens respetivas são enviadas e respostas esperadas.
+Nos menus são implementadas as funcionalidades descritas no capítulo anterior, na secção do Cliente.
+
+
+\subsection{\textit{data}}
+\textit{Package} que contém os modelos dos utilizadores e das publicações, bem como as classes dos \texttt{SegmentedJournals} que o sistema usa para guardar o seu estado.
 
 
 \chapter{Conclusão}

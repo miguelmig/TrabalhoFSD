@@ -87,31 +87,35 @@ Os outros servidores, ao receberem uma mensagem deste tipo, extraem o conteúdo 
 
 
 \subsubsection{Mensagens para a \textit{Leader Election}}
-Mensagens com a intenção de eleger um líder tem como conteúdo o $id$ de um processo
+No sistema, o líder é o processo com o maior $id$.
+
+Cada servidor começa por enviar uma mensagem a todos os outros com o seu $id$.
+Quando recebidas todas as mensagens, os servidores pegam no maior $id$ recebido, e elegem-no como líder.
 
 \subsubsection{Heartbeat}
-
+Falar do heartbeat
 
 \section{Servidor}
-
+\begin{itemize}
+    \item falar do estado, atualizações etc
+    \item responsável pela conexão dos clientes
+    \item tipos de mensagens que envia aos clientes
+\end{itemize}
 
 \section{Cliente}
-
-
-
 \begin{itemize}
-    \item Arquitetura do Sistema
+    \item Coneta-se a um servidor
+    \item falar das funcionalidades
+    \item POST e GET requests
 \end{itemize}
 
 
 \chapter{Desenvolvimento}
-\begin{itemize}
-    \item Tecnologia
-    Falar do java, intellij e atomix
-    \item Implementação
-    
-\end{itemize}
+\section{Tecnologia}
+Falar do java, intellij e atomix
 
+\section{Implementação}
+Falar do código
 
 \chapter{Resultado}
 \begin{itemize}

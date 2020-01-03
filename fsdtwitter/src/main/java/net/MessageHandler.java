@@ -26,7 +26,6 @@ public class MessageHandler
     }
 
     private ManagedMessagingService ms;
-    private Coordinator coordinatorMS;
     private int port;
 
     private int[] delivered = new int[Config.MAX_PROCESSES];
@@ -53,9 +52,6 @@ public class MessageHandler
                 Address.from(port),
                 new MessagingConfig());
 
-        // 2PCOMMIT
-        coordinatorMS = new Coordinator();
-
 
         s = new SerializerBuilder()
                 .addType(Message.class)
@@ -76,11 +72,6 @@ public class MessageHandler
         registerMessage("heartbeat");
         registerMessage("heartbeat_ok");
 
-
-        // operations related to 2p commit
-        // registerMessage("can commit?");
-        // registerMessage("commit");
-        this.coordinatorMS.registerHandlers();
     }
 
     public void startLeaderElectionProcess()
@@ -135,7 +126,6 @@ public class MessageHandler
     public void startMessageHandler()
     {
         this.ms.start();
-        this.coordinatorMS.startMS();
     }
 
     public void registerMessage(String message_type)

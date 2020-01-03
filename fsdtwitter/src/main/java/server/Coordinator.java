@@ -87,7 +87,6 @@ public class Coordinator {
             System.out.println("Transaction started!");
 
             PayloadWrapper pw = new PayloadWrapper(payload);
-            SegmentedJournalWriter<PayloadWrapper> wP
 
             this.wP.append(pw);
 

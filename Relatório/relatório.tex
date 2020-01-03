@@ -61,7 +61,6 @@ Um bom e consistente funcionamento do sistema depende de uma igualmente boa capa
 \begin{itemize}
     \item \underline{\textit{Leader election}} - é o processo de eleger um servidor como o organizador das tarefas que são distribuídas por todos os servidores. É essencial para o sistema adquirir a capacidade de organização desejada.
     \item \underline{\textit{Causal delivery}} - é uma abstração usada para garantir que as mensagens são enviadas numa ordem que respeita a relação \textit{happened-before}, que diz que se um evento deve acontecer antes de outro, o resultado destes eventos também deve refletir isso. Esta propriedade é o que permite o sistema ter informação consistente e ser coordenado.
-    \item \underline{\textit{Two phase commit}} - é um protocolo usado para coordenar todos os processos que participam numa transação distribuída para os casos de \textit{abort} ou \textit{commit}.
 \end{itemize}
 
 Os servidores comunicam apenas por mensagens, logo é com estas que o sistema tem de conseguir implementar as técnicas referidas. De modo a que seja possível conseguir diferentes fins, é necessária a existência de diferentes tipos de mensagens, como iremos ver a seguir.
@@ -201,7 +200,7 @@ Nos menus são implementadas as funcionalidades descritas no capítulo anterior,
 \chapter{Conclusão}
 Neste projeto, descrevemos o desenvolvimento do projeto da disciplina de Fundamentos de Sistemas Distribuídos.
 
-De um ponto de vista crítico, estamos satisfeitos com o resultado final do projeto, pois cumprimos todos os objetivos propostos.
+De um ponto de vista crítico, não estamos satisfeitos com o resultado final do projeto, pois não implementamos tudo o que queríamos.
 No entanto, sentimos que o nosso trabalho pode ser melhorado, por exemplo, a nível da comunicação cliente-servidor. Poderíamos utilizar o \texttt{NettyMessagingService} em vez dos \texttt{FutureLineBuffer}, isto possibilitaria o envio de informação em estruturas de dados que não \textit{Strings}.
 
 Por fim, fica a possibilidade de, no futuro, expandirmos a aplicação de modo a que não haja um número fixo de servidores, ou que não funcione apenas por broadcasts.

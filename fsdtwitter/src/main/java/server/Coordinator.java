@@ -1,5 +1,6 @@
 package server;
 
+import config.Config;
 import io.atomix.cluster.messaging.ManagedMessagingService;
 import io.atomix.cluster.messaging.MessagingConfig;
 import io.atomix.cluster.messaging.impl.NettyMessagingService;
@@ -18,6 +19,10 @@ public class Coordinator {
     private static final String CLOGNAME = "cLog";
     private static final String VLOGNAME = "vLog";
     private static final String SLOGNAME = "sLog";
+
+    public static int calculaID(int port) {
+        return port - Config.ADDR_START;
+    }
 
 
 
@@ -124,14 +129,14 @@ public class Coordinator {
         }, e);
 
         this.ms.registerHandler("ready", (origem, payload) -> {
-            int id = origem.port() - 12345;
+            int id = calculaID(origem.port());
             System.out.println("[Coordinator]" + origem.host() + " :: " +  origem.port() +  " -- esta pronto.");
             this.vereditos.addDecision(Decision.COMMIT, id);
 
         }, e);
 
         this.ms.registerHandler("abort", (origem, payload) -> {
-            int id = origem.port() - 12345;
+            int id = calculaID(origem.port());
             System.out.println("[Coordinator]" + origem.host() + " :: " +  origem.port() +  " -- pediu um abort.");
             this.vereditos.addDecision(Decision.ABORT, id);
         }, e);

@@ -61,7 +61,7 @@ Um bom e consistente funcionamento do sistema depende de uma igualmente boa capa
 \begin{itemize}
     \item \underline{\textit{Leader election}} - é o processo de eleger um servidor como o organizador das tarefas que são distribuídas por todos os servidores. É essencial para o sistema adquirir a capacidade de organização desejada.
     \item \underline{\textit{Causal delivery}} - é uma abstração usada para garantir que as mensagens são enviadas numa ordem que respeita a relação \textit{happened-before}, que diz que se um evento deve acontecer antes de outro, o resultado destes eventos também deve refletir isso. Esta propriedade é o que permite o sistema ter informação consistente e ser coordenado.
-    \item \underline{\textit{Two phase commit}} - \textbf{ainda não sei se é para meter}
+    \item \underline{\textit{Two phase commit}} - é um protocolo usado para coordenar todos os processos que participam numa transação distribuída para os casos de \textit{abort} ou \textit{commit}.
 \end{itemize}
 
 Os servidores comunicam apenas por mensagens, logo é com estas que o sistema tem de conseguir implementar as técnicas referidas. De modo a que seja possível conseguir diferentes fins, é necessária a existência de diferentes tipos de mensagens, como iremos ver a seguir.
@@ -69,8 +69,9 @@ Os servidores comunicam apenas por mensagens, logo é com estas que o sistema te
 Outro aspeto fundamental no sistema é a relação servidor-cliente. 
 Um servidor tem de ser capaz de hospedar diversos clientes, comunicar com eles, e alterar o seu estado consoante os pedidos efetuados por eles.
 
+No caso do \textit{2-phase commit}, é necessária a existência de um processo Coordenador, o qual envia e recebe mensagens dos participantes (servidores) de modo a executar o protocolo.
 
-\subsection{Mensagens}
+\subsection{Mensagens entre servidores}
 As mensagens enviadas entre servidores têm 2 campos.
 \begin{itemize}
     \item \textit{Vector Clock} - é um vetor de $N$ relógios lógicos (um relógio por servidor). Com este vetor é possível implementar o algoritmo dos \textit{vector clocks} que por sua vez assegura a \textit{causal delivery} referida acima.
@@ -99,6 +100,21 @@ As mensagens de \textit{heartbeat} servem para saber se algum servidor deixou de
 
 A cada segundo, o todos os servidores mandam mensagem aos restantes a perguntar se estão ``vivos'', e aguardam por resposta.
 Caso algum servidor não responda, o sistema espera que este reinicie, e reinicia a execução.
+
+\subsection{Mensagens entre coordenador e participantes}
+As mensagens enviadas entre o processo coordenador e os nodos participantes são dos seguintes tipos:
+\subsubsection{Coordenador para participantes:}
+\begin{itemize}
+    \item \textit{prepared} - o coordenador pergunta aos participantes se estão prontos para executar a transação;
+    \item \textit{commit} - o coordenador informa os participantes que podem fazer \textit{commit};
+    \item \textit{abort} - o coordenador avisa os participantes que não podem efetuar a transação, e estes fazem \textit{roll-back}.
+\end{itemize}
+
+\subsubsection{Participante para coordenador:}
+\begin{itemize}
+    \item \textit{ready} - o participante informa o coordenador que está preparado;
+    \item \textit{abort} - o participante avisa o coordenador que não está preparado.
+\end{itemize}
 
 \section{Servidor}
 \subsection{Conexão com o cliente}
@@ -183,6 +199,10 @@ Nos menus são implementadas as funcionalidades descritas no capítulo anterior,
 
 
 \chapter{Conclusão}
+Neste projeto, descrevemos o desenvolvimento do projeto da disciplina de Fundamentos de Sistemas Distribuídos.
+
+No geral estamos satisfeitos com o resultado, visto que cumprimos os objetivos pedidos.
+
 \begin{itemize}
     \item Discussão dos resultados
     \item Pros/contras da abordagem seguida

@@ -2,13 +2,16 @@
 \contentsline {chapter}{\numberline {1}Introdu\IeC {\c c}\IeC {\~a}o}{2}% 
 \contentsline {chapter}{\numberline {2}Proposta de Solu\IeC {\c c}\IeC {\~a}o}{3}% 
 \contentsline {section}{\numberline {2.1}Sistema}{3}% 
-\contentsline {subsection}{\numberline {2.1.1}Mensagens}{3}% 
+\contentsline {subsection}{\numberline {2.1.1}Mensagens entre servidores}{3}% 
 \contentsline {subsubsection}{\numberline {2.1.1.1}Mensagens de estado}{4}% 
 \contentsline {subsubsection}{\numberline {2.1.1.2}Mensagens para a \textit {Leader Election}}{4}% 
 \contentsline {subsubsection}{\numberline {2.1.1.3}Heartbeat}{4}% 
-\contentsline {section}{\numberline {2.2}Servidor}{4}% 
-\contentsline {subsection}{\numberline {2.2.1}Conex\IeC {\~a}o com o cliente}{4}% 
-\contentsline {subsection}{\numberline {2.2.2}Estado}{4}% 
+\contentsline {subsection}{\numberline {2.1.2}Mensagens entre coordenador e participantes}{4}% 
+\contentsline {subsubsection}{\numberline {2.1.2.1}Coordenador para participantes:}{4}% 
+\contentsline {subsubsection}{\numberline {2.1.2.2}Participante para coordenador:}{5}% 
+\contentsline {section}{\numberline {2.2}Servidor}{5}% 
+\contentsline {subsection}{\numberline {2.2.1}Conex\IeC {\~a}o com o cliente}{5}% 
+\contentsline {subsection}{\numberline {2.2.2}Estado}{5}% 
 \contentsline {section}{\numberline {2.3}Cliente}{5}% 
 \contentsline {section}{\numberline {2.4}Conex\IeC {\~a}o ao servidor}{5}% 
 \contentsline {section}{\numberline {2.5}Funcionalidades}{5}% 

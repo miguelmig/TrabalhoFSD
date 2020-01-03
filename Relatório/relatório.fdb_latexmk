@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1577660001 "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf" "relatório" 1577660001
+["pdflatex"] 1577660001 "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf" "relatório" 1577660036
   "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.aux" 1577660001 2646 27ddf487042f3fce1038f4cc62d8582b ""
   "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.tex" 1577660000 11794 503f1c8b47dd5ac383b91a1bee33b25d ""
   "/usr/local/texlive/2019/texmf-dist/fonts/map/fontname/texfonts.map" 1511824771 3332 103109f5612ad95229751940c61aada0 ""
@@ -68,8 +68,8 @@
   "relatório.toc" 1577660001 1470 c1cdc0a30bf4c13a4e3a1eacd2a92305 "pdflatex"
   (generated)
   "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.log"
-  "relatório.pdf"
-  "relatório.aux"
   "/Users/pedrorpmoura/Documents/GitHub/trabalho-fsd/Relatório/relatório.pdf"
+  "relatório.aux"
   "relatório.log"
   "relatório.toc"
+  "relatório.pdf"

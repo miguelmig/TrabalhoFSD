@@ -1,6 +1,7 @@
 package config;
 
 public class Config {
+    public static final int COORD_ADDR = 7999;
     public static final int ADDR_START = 8000;
     public static final int MAX_PROCESSES = 10;
     public static final int CLIENT_PORT_OFFSET = 1000;

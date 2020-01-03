@@ -26,7 +26,7 @@ public class MessageHandler
     }
 
     private ManagedMessagingService ms;
-    private ManagedMessagingService coordinatorMS;
+    private Coordinator coordinatorMS;
     private int port;
 
     private int[] delivered = new int[Config.MAX_PROCESSES];
@@ -54,14 +54,7 @@ public class MessageHandler
                 new MessagingConfig());
 
         // 2PCOMMIT
-        coordinatorMS = new NettyMessagingService(
-                "2pcommit",
-                Address.from(port),
-                new MessagingConfig());
-
-        coordinatorMS.registerHandler("prepared", ((address, bytes) -> {
-
-        }), e);
+        coordinatorMS = new Coordinator();
 
 
         s = new SerializerBuilder()
@@ -87,6 +80,7 @@ public class MessageHandler
         // operations related to 2p commit
         // registerMessage("can commit?");
         // registerMessage("commit");
+        this.coordinatorMS.registerHandlers();
     }
 
     public void startLeaderElectionProcess()
@@ -141,6 +135,7 @@ public class MessageHandler
     public void startMessageHandler()
     {
         this.ms.start();
+        this.coordinatorMS.startMS();
     }
 
     public void registerMessage(String message_type)
@@ -245,7 +240,8 @@ public class MessageHandler
 
     public boolean isServer(Address addr)
     {
-        if(addr.port() >= Config.ADDR_START && addr.port() < Config.ADDR_START + Config.MAX_PROCESSES)
+        if(addr.port() >= Config.ADDR_START && addr.port() < Config.ADDR_START + Config.MAX_PROCESSES ||
+            addr.port() == Config.COORD_ADDR)
         {
             return true;
         }

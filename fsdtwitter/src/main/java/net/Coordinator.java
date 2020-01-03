@@ -1,79 +1,89 @@
-package server;
+package net;
 
 import config.Config;
+import config.JournalConfig;
 import io.atomix.cluster.messaging.ManagedMessagingService;
 import io.atomix.cluster.messaging.MessagingConfig;
 import io.atomix.cluster.messaging.impl.NettyMessagingService;
 import io.atomix.storage.journal.SegmentedJournal;
+import io.atomix.storage.journal.SegmentedJournalReader;
 import io.atomix.storage.journal.SegmentedJournalWriter;
 import io.atomix.utils.net.Address;
 import io.atomix.utils.serializer.Serializer;
 import io.atomix.utils.serializer.SerializerBuilder;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Coordinator {
 
     public static final byte[] DUMMY = new byte[1];
-    private static final String CLOGNAME = "cLog";
-    private static final String VLOGNAME = "vLog";
+    private static final String DLOGNAME = "cLog";
+    private static final String PLOGNAME = "vLog";
     private static final String SLOGNAME = "sLog";
 
     public static int calculaID(int port) {
         return port - Config.ADDR_START;
     }
 
-
-
     class PayloadWrapper {
         public byte[] pl;
-
-        PayloadWrapper(byte[] payload) {
-            this.pl = payload;
-        }
+        public int tid;
     }
-
 
     ManagedMessagingService ms;
     Serializer s;
     Executor e;
-    SegmentedJournal<Character> sjDecision;
     SegmentedJournalWriter<Character> wD;
-    SegmentedJournal<PayloadWrapper> sjPayload;
     SegmentedJournalWriter<PayloadWrapper> wP;
     List<Address> lAdd;
     DecisionArray vereditos;
     Transflag inTransaction;
+    int tID;
 
+    public Coordinator() {
 
-    public Coordinator(String cName, int port, Executor e, List<Address> lAdd) {
-
-        this.ms = new NettyMessagingService(cName,
-                Address.from(port),
+        this.ms = new NettyMessagingService("Coordinator",
+                Address.from(Config.COORD_ADDR),
                 new MessagingConfig());
 
         this.s = new SerializerBuilder()
                 .addType(PayloadWrapper.class)
                 .build();
-        this.e = e;
 
-        this.sjDecision = SegmentedJournal.<Character>builder()
-                .withName(CLOGNAME)
+        this.e = Executors.newFixedThreadPool(2);
+
+        SegmentedJournal<Character> sjDecision = SegmentedJournal.<Character>builder()
+                .withName(JournalConfig.getDlog())
                 .withSerializer(this.s)
                 .build();
 
+        SegmentedJournalReader<Character> rD = sjDecision.openReader(0);
 
-        this.wD = this.sjDecision.writer();
+        /*
+        if(rD.hasNext()) {
+            Character c = rD.next().entry();
+            if(c == 'C') {
 
-        this.sjPayload = SegmentedJournal.<PayloadWrapper>builder()
-                .withName(VLOGNAME)
+            }
+            else {
+
+            }
+        }
+         */
+
+
+        this.wD = sjDecision.writer();
+
+        SegmentedJournal<PayloadWrapper> sjPayload = SegmentedJournal.<PayloadWrapper>builder()
+                .withName(JournalConfig.getPlog())
                 .withSerializer(this.s)
                 .build();
 
-        this.wP = this.sjPayload.writer();
+        this.wP = sjPayload.writer();
 
-        this.lAdd = lAdd;
         this.vereditos = new DecisionArray(lAdd.size());
         this.inTransaction = new Transflag();
     }
@@ -91,54 +101,68 @@ public class Coordinator {
 
             System.out.println("Transaction started!");
 
-            PayloadWrapper pw = new PayloadWrapper(payload);
+            PayloadWrapper pw = new PayloadWrapper();
+            pw.pl = payload;
+            pw.tid = this.tID;
 
             this.wP.append(pw);
+            this.wP.flush();
 
-            Utils.closeWriter(wP);
 
-            broadcastMsg("areuready", Coordinator.DUMMY);
+            broadcastMsg("areuready", this.s.encode(this.tID));
 
             try {
-                Thread.sleep(5000);
+                Thread.sleep(3000);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
 
             Decision d = this.vereditos.haveDecision();
-            SegmentedJournalWriter<Character> w = sjDecision.writer();
 
             if (d == Decision.COMMIT) {
-                sendDecision(w, 'C', "new", payload);
+                sendDecision(this.wD, 'C', "new", payload);
                 System.out.println("[Coordinator]Confirm!");
             }
             else if(d == Decision.ABORT){
-                sendDecision(w, 'A', "abort", DUMMY);
+                sendDecision(this.wD, 'A', "abort", DUMMY);
                 System.out.println("[Coordinator]Abort!");
             }
             else {
-                sendDecision(w, 'A', "abort", DUMMY);
+                sendDecision(this.wD, 'A', "abort", DUMMY);
                 System.out.println("[Coordinator]Someone did not answer! Is he dead?");
             }
 
-            // fim da transacao e aviso
 
+            // fim da transacao - apagar informação relativa a esta ultima.
             this.vereditos.zeroOut();
-            this.dumpJournals();
+            this.tID++;
+            this.wD.truncate(0);
             this.inTransaction.endTransaction();
         }, e);
 
         this.ms.registerHandler("ready", (origem, payload) -> {
-            int id = calculaID(origem.port());
-            System.out.println("[Coordinator]" + origem.host() + " :: " +  origem.port() +  " -- esta pronto.");
-            this.vereditos.addDecision(Decision.COMMIT, id);
+            int sid = calculaID(origem.port());
+            int tID = s.decode(payload);
+
+            if(tID == this.tID) {
+                System.out.println("[Coordinator]" + origem.host() + " :: " + origem.port() + " -- esta pronto.");
+                this.vereditos.addDecision(Decision.COMMIT, sid);
+            }
+            else
+                System.out.println("[Coordinator]Late response!");
 
         }, e);
 
         this.ms.registerHandler("abort", (origem, payload) -> {
             int id = calculaID(origem.port());
-            System.out.println("[Coordinator]" + origem.host() + " :: " +  origem.port() +  " -- pediu um abort.");
-            this.vereditos.addDecision(Decision.ABORT, id);
+            int tID = s.decode(payload);
+
+            if(tID == this.tID) {
+                System.out.println("[Coordinator]" + origem.host() + " :: " + origem.port() + " -- pediu um abort.");
+                this.vereditos.addDecision(Decision.ABORT, id);
+            }
+            else
+                System.out.println("[Coordinator] Late response!");
         }, e);
     }
 
@@ -151,23 +175,13 @@ public class Coordinator {
 
     private void sendDecision(SegmentedJournalWriter<Character> w, Character je, String msgType, byte[] pl) {
         w.append(je);
-        Utils.closeWriter(w);
+        CompletableFuture.supplyAsync(() -> {
+            w.flush();
+            return null;
+        });
         this.broadcastMsg(msgType, pl);
     }
 
-    private void dumpJournals() {
-        Utils.closeWriter(this.wD);
-        Utils.closeWriter(this.wP);
-
-        /*
-        CompletableFuture.supplyAsync(() -> {
-            wd.close();
-            wp.close();
-            return null;
-        });
-
-         */
-    }
 
     public void startMS() {
         this.ms.start();
@@ -175,5 +189,7 @@ public class Coordinator {
 
     public void stopMS() {
         this.ms.stop();
+        this.wP.close();
+        this.wD.close();
     }
 }

@@ -1,4 +1,4 @@
-package server;
+package net;
 
 public class Transflag {
     private boolean flag;
